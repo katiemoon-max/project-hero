@@ -1,0 +1,28 @@
+# R2 — MS/QP Verbatim Extraction Agent (Project Hero writer slice)
+
+You will be given parameters: SUBTOPIC, UNIT, SP_NAMES, CORPUS_DIR, RESEARCH_DIR.
+
+First read `<RESEARCH_DIR>\vault-digest.md` — its per-SP exam-appearance tables list every sitting/question where the spec point(s) appeared.
+
+Corpus: `<CORPUS_DIR>` — converted `.md` files per sitting (question paper / mark scheme / examiner report; the exact naming convention is in `project.json` → `corpus.file_naming`). NOTE: resit/variant sittings (e.g. "(A)"-suffixed) are SEPARATE sittings with separate files — verify which variant holds the question before extracting. Known corpus casualties (mojibake files, lost tables) are listed in `project.json` → `corpus.known_casualties` and the wave-state file — never cite a file on that list.
+
+Task: pick the strongest candidates from the appearance table(s) for (a) worked examples and (b) per-format marking-point blocks — cover the formats that actually occur in this course (MCQ vs structured vs levelled/extended-response; calculation vs qualitative). For multi-SP subtopics cover each SP. For each chosen question extract to `<RESEARCH_DIR>\ms-extracts.md` (grouped by SP):
+
+- Sitting + question ref (full month + main question number, e.g. "June 2023 Q17"; asterisked/starred refs as "Q*14" where the board marks them)
+- VERBATIM question stem from the QP, incl. MCQ options where relevant (note figure dependence as [figure: description])
+- VERBATIM MS marking points — keep per-point mark tags ("(1)"), "Use of…", "Or", "ecf", "show that" phrasing exactly as the scheme writes them
+- Any ER comment on that specific question, verbatim, with sitting attribution
+
+HARD RULES:
+- Every number that could appear in a worked example MUST be verified against the MS example calculation — quote the MS calculation line
+- Where a converted QP is corrupted (mojibake), recover numbers from MS example calculations; mark unrecoverable items "UNRECOVERABLE — do not use"
+- Count claims: per-file `grep -c` only; never totals from files_with_matches
+- **ER header-form gotcha (earned defect):** examiner reports do NOT use one consistent question-header style. Some use "Question 18", others `Q18(a)` / `Q18 (a)`, and a third variant `Q 15 (a)` puts a space BOTH after the Q and before the bracket. Searching only one form produces FALSE "no ER comment exists" results — in the pilot build this nearly deleted three verified claims downstream. Before recording "no ER", search ALL of: `Question <n>`, `Q<n>`, `Q<n>(`, `Q<n> (`, `Q <n>`, `Q <n> (`, plus a distinctive content word from the question stem. A whitespace-tolerant regex (`Q\s*<n>\s*\(`) beats enumerating forms. Only report absence when every form misses
+- **Page-break gotcha (earned defect):** converted `.md` files carry `## Page N` markers mid-document, and an ER paragraph or MS block can be split across one. Extraction that stops at the page marker truncates the claim — in the pilot build a reverse-working paragraph broke across a page marker, the extract stopped short, and a genuine claim looked unverifiable downstream. When a quote runs to the end of a page, ALWAYS read past the next `## Page N` marker and continue the quote if the sentence or list carries on
+- Extract-only: no invention, no paraphrase inside quoted material; your own words only in labels marked [note: …]
+- **Stems verbatim or not at all (earned defect):** any question you reference beyond a bare appearance-table row must have its stem extracted VERBATIM — never summarised or characterised from memory. If you deliberately skip a stem, mark the entry "stem not extracted — downstream writers must not characterise this question's demand". The pilot build's worst structural blocker was a writer reconstructing a stem wrongly because no evidence file carried it in full, making the file's central claim false
+- **Inferred figure/diagram content must be consistency-checked (earned defect):** where a figure did not survive conversion and you infer what it showed (a circuit layout, a graph shape, a diagram's geometry), re-derive it from the scheme's own numbers/example calculation and state the consistency check in a [note: …]. Two pilot-build layouts inferred from prose were wrong; the scheme's arithmetic caught both
+- **Levelled/extended-response questions (only for courses that have them — see `project.json` → `template.has_levelled_questions`) are a MANDATORY, separately-reported section of the extract — never just another row.** If the SP has a levelled appearance, extract its full indicative-content / credited-statements list from the MS (writers may not invent IC), and say which sitting and ref it is. If it has none, say so explicitly, and give the evidence: the levelled question of EVERY sitting in the unit's corpus, with its ref and one-line topic. If the unit's levelled-question index (`research/<unit-key>/_levelled-questions.md`) already exists, cite it rather than re-deriving; only go back to the papers if the index looks wrong for your spec point. Locate levelled questions from the mark schemes (the indicative-content block and the star/asterisk on the question ref — QP conversions often lose the asterisk), not from tariffs. **A high tariff alone is not evidence of a levelled question** — several SPs have 5–6 mark point-marked parts and no levelled appearance at all, and conflating the two is a live defect class from the pilot build
+- Aim for 4–8 questions per spec point; prefer recent sittings and format variety over quantity
+
+Return: list of extracted questions (SP, sitting, ref, format, marks) + any data-quality flags hit.

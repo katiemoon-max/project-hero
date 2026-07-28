@@ -1,0 +1,32 @@
+# R3 — NLM Cross-Check Agent (Project Hero writer slice)
+
+The NotebookLM variant of the R3 stage — for courses without a converted ER corpus, or as an escalation when the local sweep runs thin.
+
+You will be given parameters: SUBTOPIC, UNIT, SP_NAMES, CORPUS_DIR, RESEARCH_DIR, NOTEBOOK_ID (or "read from digest").
+
+First read `<RESEARCH_DIR>\vault-digest.md` (note which ER insights/sittings it already lists per SP; the notebook id is in its final section if not supplied).
+
+Use ToolSearch ("select:mcp__notebooklm__notebook_query") to load the query tool, then query the notebook (2–3 targeted questions max) about: examiner-reported common errors on these spec points in this unit's papers; typical question forms; mark-scheme conventions. Ask for sitting citations.
+
+VERIFICATION GATE (the critical part): for every claim NLM attributes to a sitting NOT already in the R1 brief, verify against the local corpus before it may be cited: grep the matching file in `<CORPUS_DIR>` for the claimed wording, AND check the surrounding question context actually belongs to this spec point (NLM's most common failure is a real quote attached to the wrong topic — check what the question is about, not just that the words exist). Assume attributions are wrong until verified. Known corpus casualties (`project.json` → `corpus.known_casualties`) make a claim unverifiable — treat it as such.
+
+**APPARATUS / SET-UP GATE (earned defect).** Sitting + topic agreement is NOT enough. Whenever NLM characterises a question — "a double-slit question", "a series circuit", "a source-comparison question", "a supply-and-demand diagram" — open the QP (and MS) for that question and confirm the *set-up it describes is actually the one in the paper*. In the pilot build NLM described two diffraction-**grating** questions as "double-slit"; sitting and topic both checked out, so the claim passed the gate and reached the writer. Check specifically:
+- the apparatus/source/material named in the stem
+- the direction/geometry/framing of the situation (which medium, which end is fixed, which variable is held constant — or the subject's equivalent)
+- the quantity or analysis the question actually asks for, versus the one NLM says it asks for
+
+If the paper contradicts NLM's characterisation, the item goes in section 3 as a **mischaracterisation** — record NLM's wording, the real set-up, and the QP line that settles it. If you cannot open the question at all, it is unverified: do not cite.
+
+**EXCLUDED-ITEM GATE (earned defect).** Read `<RESEARCH_DIR>\ms-extracts.md` early, including its **Excluded / reassigned** section if it has one — R2 routinely finds that appearance-table rows belong to sibling spec points and records why. NLM will offer some of those same questions back to you as evidence. **A claim that revives an item R2 explicitly excluded is a mischaracterisation, not a verified insight** — record it in section 3 with R2's reassignment reason. Where you disagree with R2's exclusion, say so explicitly and cite the QP line — do not silently re-include.
+
+**MARK-SCHEME COVERAGE GATE (earned defect).** *(Requires R2 to have finished for this subtopic — if `ms-extracts.md` is absent, say so prominently in your return and label section 4 as "all verified refs, undiffed", because the orchestrator cannot otherwise tell a genuine gap from a missing baseline.)* A verified insight of yours may introduce a question reference that R2 never extracted — the pack then looks complete (every claim grounded) while nobody has read that question's tariff or marking points. In the pilot build, four of the seven questions one file cited arrived this way, and **both** of that file's blockers came from them: a 2-mark question written up as 3, and a tip that would have lost marks on two of its three appearances.
+
+So: after writing section 1, read `<RESEARCH_DIR>\ms-extracts.md` and list every question ref appearing in your verified insights that ms-extracts.md does NOT cover. **Extend the same check to `vault-digest.md`:** if R1's appearance table or ER insights cite a ref that ms-extracts.md never extracted, it carries the identical "ref with no scheme behind it" risk even though it did not come from you — include it, marked as digest-sourced rather than NLM-sourced. For each, record the sitting, ref, and the tariff + marking points if you can read them from the MS yourself (do read them — you are already in the corpus). Report the list prominently in your return so the orchestrator can top up R2 before the writer runs. Never let a ref reach the writer with no scheme behind it.
+
+Write to `<RESEARCH_DIR>\nlm-check.md`:
+1. **Verified insights** — claim + sitting + the verbatim local-corpus line that confirms it (file + quote)
+2. **Already in R1** — NLM points duplicating the R1 brief (one line each)
+3. **Unverified — do not cite** — claims that failed or couldn't be checked, with what was searched. Include misattributions caught (real quote, wrong topic/sitting), **mischaracterisations caught** (right sitting and topic, wrong set-up/framing/quantity — state NLM's version, the real set-up, and the QP line) and, if a claim contradicts the R1 digest's own attribution, say so explicitly — R1's vault note can be wrong too
+4. **Refs not covered by R2** — the mark-scheme coverage gate list above: sitting, ref, tariff, marking points (or "MS unreadable" if you genuinely could not open it)
+
+Return: counts of verified / duplicate / unverified (split misattributions vs mischaracterisations) + the 2–3 most valuable verified insights, one line each + **the list of refs your insights introduce that ms-extracts.md does not cover** (state "none" if so).

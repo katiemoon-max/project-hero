@@ -1,0 +1,69 @@
+{
+  "pipeline": "project-hero-knowledge-export",
+  "created": "<YYYY-MM-DD>",
+  "course": {
+    "board": "<Board, e.g. Edexcel>",
+    "qualification": "<Qualification, e.g. IAL>",
+    "subject": "<Subject, e.g. Physics>",
+    "subject_slug": "<lowercase tag for frontmatter, e.g. physics>",
+    "name": "<Board Qualification Subject>",
+    "cobalt_course_id": "crs_...",
+    "level_slug": "<Cobalt level slug, e.g. international-a-level>"
+  },
+  "paths": {
+    "project_dir": "<absolute path to this export directory>",
+    "vault_notes": "<absolute path to the per-spec-point vault notes directory>",
+    "corpus_root": "<absolute path to the converted past-paper corpus (QP/MS/ER .md per sitting)>",
+    "board_conventions": "<absolute path to the board marking-conventions file>",
+    "sp_mapping": "sp-mapping.json",
+    "manifest": "upload-manifest.json",
+    "prompts": "prompts",
+    "scripts": "scripts",
+    "knowledge_files": "knowledge-files",
+    "research": "research"
+  },
+  "corpus": {
+    "unit_dir_pattern": "<how unit/paper subdirectories are named, e.g. 'Unit <N>'>",
+    "file_naming": "<per-sitting file naming, e.g. '<YYYY> <Mon> - Question paper.md / - Mark scheme.md / - Examiner report.md'>",
+    "sitting_variants": "<how resit/variant sittings are marked, e.g. '(A)'-suffixed sittings are separate files>",
+    "known_casualties": [
+      "<files that are mojibake or otherwise unusable — never cite; keep this list current as waves discover more>"
+    ]
+  },
+  "template": {
+    "exam_skeleton": [
+      "<one entry per H4 in the per-SP exam section, ratified at /hero-0-setup step 3>",
+      "<e.g. 'Multiple Choice (Section A)', 'Structured Questions (Section B)', 'Levelled 6-Mark Questions (Section B)'>"
+    ],
+    "has_levelled_questions": true,
+    "skills_line_label": "Mathematical skills",
+    "no_skills_marker": "No mathematical skills for this spec point"
+  },
+  "exemplars": [
+    "<path to approved pilot knowledge file>",
+    "<path to one structural-match exemplar (e.g. multi-SP, or no-skills-line SP)>"
+  ],
+  "research_mode": "local",
+  "research_mode_notes": "local = R3-local-check.md systematic ER sweep (default). hybrid = local first, NLM escalation when a subtopic's sweep returns <3 usable ER passages. nlm = R3-nlm-check.md (for courses without a converted ER corpus); notebook ids live in the vault notes' frontmatter.",
+  "model_policy": {
+    "research": "sonnet",
+    "fixers": "sonnet",
+    "upload": "sonnet",
+    "writers": "opus",
+    "checkers": "strongest available, never below Opus 5"
+  },
+  "quality_gates": {
+    "fixer_diff_sweep": true,
+    "sampled_reaudit_per_wave": "2-3 files, risk-picked, blind to original checker-report",
+    "preflight_sweep": "master mode pre-strip, --cobalt mode pre-upload",
+    "upload_hold": "no upload until the user approves the wave sample"
+  },
+  "wave_size": "~15 subtopics (max 19)",
+  "concurrency_cap": 20,
+  "status": {
+    "units_complete": [],
+    "docs_live": 0,
+    "next_unit": 1,
+    "blockers": []
+  }
+}
