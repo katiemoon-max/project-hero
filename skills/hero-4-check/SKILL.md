@@ -1,9 +1,9 @@
 ---
-name: hero-3-check
-description: Project Hero wave checking phase. Launches adversarial checker agents (strongest-model tier) per drafted subtopic, adjudicates escalations by reading the papers, then launches fixer agents per report. The quality gate before publish — never trimmed, never downgraded below Opus 5.
+name: hero-4-check
+description: Stage 4 of the Project Hero pipeline — wave checking. Launches adversarial checker agents (strongest-model tier) per drafted subtopic, adjudicates escalations by reading the papers, then launches fixer agents per report. The quality gate before publish — never trimmed, never downgraded below Opus 5.
 ---
 
-# /hero-3-check — checkers, rulings, fixers
+# /hero-4-check — checkers, rulings, fixers
 
 Read `project.json` and the wave-state file. Checker model: strongest available per project policy (never below Opus 5). Fixers: research tier (default Sonnet).
 
@@ -19,4 +19,4 @@ Read `project.json` and the wave-state file. Checker model: strongest available 
 
 Blocker/fix/note counts per file; blocker-class tally (manufactured certainty, quote integrity, factual/data, symbols, direction) — this is the metric record that process reviews depend on; note the checker MODEL actually used per file (session-kill substitutions happen and matter later).
 
-Next: `/hero-4-publish` once all wave files are fixed.
+Next: `/hero-5-publish` once all wave files are fixed.

@@ -1,6 +1,6 @@
 # R3 — NLM Cross-Check Agent (Project Hero writer slice)
 
-The NotebookLM variant of the R3 stage — for courses whose **ER** corpus is missing or unconverted, or as an escalation when the local sweep runs thin. A converted local QP/MS corpus is still required: the verification and apparatus gates below check every claim against local files, so with no local corpus every claim lands in section 3 and this stage produces zero citable content (see `/hero-0-setup` §0).
+The NotebookLM variant of the R3 stage — for courses whose **ER** corpus is missing or unconverted, or as an escalation when the local sweep runs thin. A converted local QP/MS corpus is still required: the verification and apparatus gates below check every claim against local files, so with no local corpus every claim lands in section 3 and this stage produces zero citable content (which is why corpus conversion starts at `/hero-0-setup` and `/hero-2-research` gates on it being complete).
 
 You will be given parameters: SUBTOPIC, UNIT, SP_NAMES, CORPUS_DIR, RESEARCH_DIR, NOTEBOOK_ID (or "read from project.json" — `corpus.notebook_id`; the R1 digest's final section is a fallback cross-check).
 

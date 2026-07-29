@@ -1,9 +1,9 @@
 ---
-name: hero-4-publish
-description: Project Hero wave publish phase. Runs protect/strip/preflight sweeps, holds for the user's spot-check, then uploads via createDocument and updates the manifest. Upload is irreversible — no delete API — so every gate is mandatory.
+name: hero-5-publish
+description: Stage 5 of the Project Hero pipeline — wave publish. Runs protect/strip/preflight sweeps, holds for the user's spot-check, then uploads via createDocument and updates the manifest. Upload is irreversible — no delete API — so every gate is mandatory.
 ---
 
-# /hero-4-publish — sweep, hold, upload
+# /hero-5-publish — sweep, hold, upload
 
 Read `project.json` and the wave-state file. Upload agent: research tier (default Sonnet). **`createDocument` has no delete or move — never create twice; fixes to live docs go through `updateDocument`.**
 
@@ -17,4 +17,4 @@ Read `project.json` and the wave-state file. Upload agent: research tier (defaul
 6. Upload sequentially via `createDocument` (`.cobalt.md` content only); append every `document_id` + chunk count to `upload-manifest.json` and the wave-state table; zero-warning uploads are the norm — investigate any warning before continuing
 7. Spot-check retrieval live (`queryDocuments` against a couple of the new subtopics)
 
-Close the wave: record final counts in the wave-state file, list any "upstream pack corrections owed" and "prompt hardenings for next wave" at the top — the next wave's `/hero-1-research` gates on that list being applied.
+Close the wave: record final counts in the wave-state file, list any "upstream pack corrections owed" and "prompt hardenings for next wave" at the top — the next wave's `/hero-2-research` gates on that list being applied.

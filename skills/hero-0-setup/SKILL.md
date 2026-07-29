@@ -1,53 +1,56 @@
 ---
 name: hero-0-setup
-description: Initialise a Project Hero knowledge-file export for a new course (any board/subject). Gathers Cobalt course id and structure, corpus and vault-note paths, research mode, exam-skeleton template and exemplars; writes project.json, sp-mapping.json and the export README. Run once per course before any other /hero-* skill.
+description: Stage 0 of the Project Hero pipeline — course onboarding. Fetches and ratifies the Cobalt course structure against the tracker CSV (hard gate), sets up the NotebookLM notebook, kicks off corpus conversion, and writes project.json as the single source of truth for the whole lifecycle. Run once per course before any other /hero-* skill.
 ---
 
-# /hero-0-setup — course onboarding (subject-agnostic)
+# /hero-0-setup — course onboarding (stage 0)
 
-Initialise a knowledge-file export project. Everything course-specific is captured HERE, in `project.json` — the downstream stage prompts are subject-agnostic and must not need editing per course.
+First stage of the Project Hero lifecycle: **setup → vault → research → write → check → publish** (`/hero-0-setup` → `/hero-1-vault` → `/hero-2-research` → `/hero-3-write` → `/hero-4-check` → `/hero-5-publish`, with `/hero` re-orienting at any point).
 
-## 0. Preconditions (hard gate — check FIRST, refuse early)
+Everything course-specific is captured HERE, in `project.json` — the single source of truth for every later stage, including the vault build. The downstream stage prompts are subject-agnostic and must not need editing per course.
 
-The export pipeline has two unconditional inputs. `research_mode` switches **R3 only** — R1 and R2 run in every mode. Verify both inputs exist before gathering anything else; if either is missing, STOP with the message below. Do not let setup complete and wave 1 fail silently — an empty vault digest passes every downstream gate trivially, so the failure would be invisible.
-
-1. **A per-spec-point vault** (one note per spec point). R1 reads it unconditionally; the digest it produces is the spine of every later stage (R2 candidate selection, R3 coverage gates, writer evidence, checker parity). There is no degraded no-vault mode. **No vault → stop:** "This course has no per-SP vault yet — build one first with `/project-hero`, then re-run `/hero-0-setup`."
-2. **A converted local QP/MS corpus** (`.md` per sitting). R2 reads it unconditionally in ALL research modes, and even `nlm` mode's verification and apparatus gates verify claims against local files. `nlm` covers a missing **ER** corpus only — not a missing corpus. **No QP/MS corpus → stop:** "This course's papers are not converted to local markdown — convert QPs and MSs per sitting first (missing ERs can be covered by `research_mode: nlm`), then re-run `/hero-0-setup`."
-
-A NotebookLM notebook, however complete, satisfies **neither** precondition — there is currently no notebook-only research path (no NLM variant of R1 or R2 exists).
-
-## 1. Gather (ask; verify everything the user asserts)
+## 1. Course facts (ask; verify everything the user asserts)
 
 | Item | How to verify |
 |---|---|
-| Board, qualification, subject, course name | user |
-| Cobalt course id (`crs_…`) | `getCourseStructure` — confirm section/topic/subtopic tree loads |
-| Vault spec-note directory (one note per spec point) | list it; spot-open two notes and **profile each against R1's nine extraction items** (spec text · exam-appearance table · ER insights with sitting attribution · MS conventions · subject skills or the no-skills marker · practical links · misconceptions · Cobalt commentary · notebook id in frontmatter); record which items are present and which are absent. Absent items are declared research debt for wave 1, not an automatic fail — but a directory of spec-text-only notes satisfies 1 of 9 and starves R1, and this profile is what catches that. Also record the frontmatter schema |
-| Research mode: `local` (systematic ER sweep of the corpus — default) / `hybrid` (local + NLM escalation) / `nlm` (ER corpus missing or unconverted; **converted QP/MS corpus still required — see §0**) | user choice, sanity-checked against what the corpus actually contains |
-| Past-paper corpus directory (converted `.md` per sitting: QP / MS, plus ER unless mode is `nlm`) | list it; record `corpus.kind` and the file-naming convention in project.json; note missing ERs, sitting variants (e.g. "(A)" resits), unusable items → `corpus.known_casualties` (file paths for local files; source titles for notebook sources — missing, duplicate or variant sources such as "Revised Mark Scheme" replacing "Mark Scheme") |
-| If hybrid/nlm: NotebookLM notebook id → `corpus.notebook_id` | verify **directly against the notebook**: `mcp__notebooklm__notebook_get` returns the title and full source list, proving it is populated and reachable. Vault-note frontmatter is a cross-check only, not the source of truth — notebook and vault are independent artefacts |
-| Board conventions file (marking guidance, command words, levelled/extended-response mechanism if the course has one) | exists, or schedule its extraction as a first-wave task |
-| Skills flag line for this subject (`template.skills_line_label`) | e.g. "Mathematical skills" for sciences/maths, "Source-analysis skills" for history, "Practical skills" for PE — plus the vault notes' no-skills marker phrase (`template.no_skills_marker`) |
-| Style exemplars (2 max: approved pilot + one structural match) | files exist |
+| Board, qualification, subject, spec code, course name | user |
+| Cobalt course id (`crs_…`) | `getCourseStructure` — confirm the section/topic/subtopic/spec-point tree loads |
 | Model policy | default: Sonnet research/fixers/upload · Opus writers · checker = strongest available (never below Opus 5); record any override |
+| Skills flag line for this subject (`template.skills_line_label`) | e.g. "Mathematical skills" for sciences/maths, "Source-analysis skills" for history, "Practical skills" for PE — plus the no-skills marker phrase (`template.no_skills_marker`) the vault notes will use |
 
-## 2. Build `sp-mapping.json`
+## 2. Structure snapshot + CSV cross-check (HARD GATE — do not skip)
 
-From `getCourseStructure` + the vault notes (use `scripts/build_mapping.py` as the starting point): subtopics keyed by Cobalt id (name, section, topic, sp_ids) and a mapping array (vault_file ↔ cobalt_sp_id/sp_name/subtopic). Flag: multi-SP subtopics (SP_NAMES order matters), name mismatches between vault and Cobalt (Cobalt names are authoritative for headings — record genuine differences as aliases), subtopic names containing colons (YAML double-quoting rule), and **spec points with no writable content** (e.g. video-placeholder SPs that exist in Cobalt with a heading and nothing to write against) — mark these `"no_content": true` in the mapping so writers and checkers treat them as correctly empty rather than reporting spurious defects.
+The Cobalt structure is the skeleton for everything downstream — the vault is built one note per Cobalt spec point, so getting this right up front is what kills the vault↔CMS mapping problem. But **Cobalt is not ratified blind**: the tracker cross-check is what catches structure that should not be written against.
 
-## 3. Template check (hard gate)
+1. Save the full `getCourseStructure` tree to `cobalt-structure.json` (sections → topics → subtopics → spec points, all ids and names verbatim).
+2. Get the course's Master Syllabus from the subject tracker as a cross-check. **Prefer a downloaded CSV** (most token-efficient — ask the user to File > Download > CSV from the tracker's Master Syllabus tab); fall back to the Google Sheet via URL or Drive MCP if a download is awkward.
+3. **Diff the two and present the discrepancy report to the user.** Flag, at minimum:
+   - Spec points in Cobalt but not the tracker — classic case: video-placeholder SPs ("Video of …") that exist as CMS entries with nothing to write against → propose `no_content: true` for each
+   - Spec points in the tracker but not Cobalt — content the CMS may be missing; needs a user ruling, not a silent skip
+   - Name mismatches (fold curly apostrophes and case before flagging; Cobalt names are authoritative for headings — record genuine differences as aliases)
+   - Per-subtopic SP counts on both sides, and subtopic names containing colons (YAML double-quoting rule downstream)
+4. **The user ratifies the proposed structure before anything is written.** Record the ratification date, the discrepancy list and the rulings in `project.json` → `structure`. A discrepancy resolved here costs one question; discovered in a wave it costs a rewrite.
+5. Generate `sp-mapping.json` mechanically from the ratified tree — subtopics keyed by Cobalt id (name, section, topic, sp_ids) and the mapping array with vault filenames derived from the naming convention (`[S.T.Sub.SP] [SP name].md`). The vault is Cobalt-keyed by construction, so this needs no reconciliation stage later. Carry the `no_content` flags into the mapping so writers and checkers treat those SPs as correctly empty.
 
-Open two recent QPs and MSs and confirm the paper structure matches the assumed exam-section skeleton (MCQ section? structured questions? levelled/indicative-content questions?). **Record the ratified skeleton in `project.json` → `template.exam_skeleton` and get it ratified by the user before wave 1** — a high-tariff question is not evidence of a levelled question, and a practical paper may have no MCQ section at all. This gate exists because template assumptions imported from a previous course silently corrupt every file in a wave.
+## 3. NotebookLM notebook
 
-Every `template.*` value in `project.json.template` is a placeholder — fill all of them (including `has_levelled_questions`) from this gate's evidence, never from a previous course or from the worked example in `templates/README-template.md`.
+1. Ask whether a notebook exists for this course; if not, walk the user through creating one in the NLM web UI and uploading sources: all past papers, mark schemes, examiner reports, the specification PDF and the extracted Cobalt content file (give the extraction prompt from `/hero-1-vault` if not yet done).
+2. Sources renamed to clear paper-code names (e.g. `1PH0 Paper 1H – 2024 June – Mark Scheme`) — ambiguous names cause fabricated citations downstream.
+3. Verify **directly against the notebook**: `mcp__notebooklm__notebook_get` returns the title and full source list, proving it is populated and reachable. Record `corpus.notebook_id` in `project.json`. Note absent/duplicate/variant sources (e.g. "Revised Mark Scheme" replacing "Mark Scheme") → `corpus.known_casualties` as source titles.
 
-**If some sittings are reachable only through NotebookLM** (rare, given §0 — but possible for the specific recent sittings you want): the evidence bar for a retrieval-derived skeleton is higher. Query at least **four papers** (two sittings × two papers where the course has multiple), QP **and** MS for each, and quote the front cover verbatim for totals, timing and tiering. And a hard rule: **no superlative ("highest tariff", "only", "always") may enter the skeleton without paper-level confirmation** — retrieval sees the parts it retrieved, not every part, so a retrieved "highest" is not a highest. Prefer opening local papers wherever they exist.
+## 4. Corpus conversion — kick off now, gate later
 
-## 4. Write outputs
+The research stages grep and quote **local converted markdown**, never raw PDFs — converted `.md` (and CSV) cost a fraction of the tokens of any other format and make every quote verifiable by construction. `research_mode` switches R3 only; R2 reads the local QP/MS corpus unconditionally in every mode.
 
-- `project.json` — all of the above (paths absolute, ids verbatim; start from `templates/project.json.template` in this repo; every `template.*` placeholder filled from §3 evidence)
-- Export `README.md` — template rules block + status checklist (start from `templates/README-template.md`, adjusting the course facts and the exam-skeleton block)
-- Pipeline blueprint: copy `templates/WRITER-SLICE.md` into the project directory
-- Directory skeleton: `research/`, `knowledge-files/`, `prompts/` (copy the seven stage prompts from `templates/prompts/` — they are subject-agnostic), `scripts/` (copy `strip_for_cobalt.py`, `protect_starred_refs.py`, `verify_starred_refs.py`, `preflight_sweep.py`, `fixer_diff_sweep.py`, `build_mapping.py` **and `requirements.txt`** — two of the scripts import `commonmark`)
+1. Locate the source PDFs (already in hand from §3) and **start converting QPs and MSs to one `.md` per sitting now**, as background agents — conversion can run while the vault builds. Convert ERs too where they exist; if the ER corpus is missing or unconverted, set `research_mode: nlm` (that is the only thing `nlm` covers).
+2. Record in `project.json`: `corpus.kind`, the unit/file naming conventions, sitting variants (e.g. "(A)" resits are separate sittings), and casualties as they surface (file paths for local files, source titles for notebook sources — never cite either kind).
+3. Track `corpus.conversion.status` (`pending → running → complete`). **`/hero-2-research` gates on `complete`** — waves must never start against a partial corpus.
 
-Next: `/hero-1-research` for wave 1.
+## 5. Write outputs
+
+- `project.json` — the single source of truth: course facts, ratified structure summary, notebook id, corpus conventions + conversion status, research mode, skills label, model policy, lifecycle status (start from `templates/project.json.template`; every `template.*` value stays a placeholder until the `/hero-2-research` entry gate ratifies the exam skeleton)
+- `cobalt-structure.json` + `sp-mapping.json` (from §2)
+- Project README from `templates/README-template.md`; pipeline blueprint `templates/WRITER-SLICE.md`
+- Directory skeleton: `research/`, `knowledge-files/`, `prompts/` (copy the seven stage prompts from `templates/prompts/`), `scripts/` (copy the six `.py` scripts **and `requirements.txt`** — two scripts import `commonmark`)
+
+Next: `/hero-1-vault` — or, if a per-SP vault already exists for this course, run `/hero-1-vault` and take its **adopt-existing-vault** path (it verifies the vault instead of building one).

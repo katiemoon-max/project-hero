@@ -1,20 +1,24 @@
 {
-  "pipeline": "project-hero-knowledge-export",
+  "pipeline": "project-hero",
   "created": "<YYYY-MM-DD>",
   "course": {
     "board": "<Board, e.g. Edexcel>",
     "qualification": "<Qualification, e.g. IAL>",
     "subject": "<Subject, e.g. Physics>",
     "subject_slug": "<lowercase tag for frontmatter, e.g. physics>",
+    "spec_code": "<board spec code, e.g. 1PH0>",
     "name": "<Board Qualification Subject>",
     "cobalt_course_id": "crs_...",
     "level_slug": "<Cobalt level slug, e.g. international-a-level>"
   },
   "paths": {
-    "project_dir": "<absolute path to this export directory>",
-    "vault_notes": "<absolute path to the per-spec-point vault notes directory>",
+    "project_dir": "<absolute path to this project directory>",
+    "vault_notes": "<absolute path to the per-spec-point vault (chosen at /hero-1-vault step 7)>",
     "corpus_root": "<absolute path to the converted past-paper corpus (QP/MS/ER .md per sitting)>",
-    "board_conventions": "<absolute path to the board marking-conventions file>",
+    "board_conventions": "<absolute path to the board marking-conventions file, or null until extracted>",
+    "cobalt_structure": "cobalt-structure.json",
+    "syllabus_cross_check": "<path to the downloaded tracker CSV used for the §2 cross-check (CSV preferred; G-sheet URL if that's what was used)>",
+    "cobalt_content": "<path to the extracted Cobalt commentary/ET&T file>",
     "sp_mapping": "sp-mapping.json",
     "manifest": "upload-manifest.json",
     "prompts": "prompts",
@@ -22,30 +26,51 @@
     "knowledge_files": "knowledge-files",
     "research": "research"
   },
+  "structure": {
+    "ratified": "<YYYY-MM-DD the user ratified the Cobalt-tree/tracker diff at /hero-0-setup §2 — null means DO NOT BUILD>",
+    "cross_check_findings": [
+      "<each discrepancy + the user's ruling, e.g. '3 video-placeholder SPs in Cobalt, not in tracker -> no_content'>"
+    ],
+    "no_content_sp_ids": [
+      "<spcpt_... ids ruled content-free — no vault note, writers/checkers treat as correctly empty>"
+    ]
+  },
   "corpus": {
-    "kind": "<local | notebook | mixed — what the corpus physically is; a converted local QP/MS corpus is required in every research mode (see /hero-0-setup §0)>",
+    "kind": "<local | notebook | mixed — what the corpus physically is; a converted local QP/MS corpus is required before /hero-2-research in every research mode>",
     "unit_dir_pattern": "<how unit/paper subdirectories are named, e.g. 'Unit <N>'>",
     "file_naming": "<per-sitting file naming, e.g. '<YYYY> <Mon> - Question paper.md / - Mark scheme.md / - Examiner report.md'>",
     "sitting_variants": "<how resit/variant sittings are marked, e.g. '(A)'-suffixed sittings are separate files>",
-    "notebook_id": "<NotebookLM notebook id — required when research_mode is hybrid or nlm; verify with notebook_get at /hero-0-setup §1; null for local mode>",
+    "notebook_id": "<NotebookLM notebook id — verified with notebook_get at /hero-0-setup §3; required for the vault build and for hybrid/nlm research modes>",
+    "conversion": {
+      "status": "<pending | running | complete — kicked off at /hero-0-setup §4; /hero-2-research gates on complete>",
+      "notes": "<converter used, repair passes owed, sittings still outstanding>"
+    },
     "known_casualties": [
       "<unusable items — never cite. Local corpus: file paths (mojibake, lost tables). Notebook corpus: source titles (missing/duplicate sources, or variants such as 'Revised Mark Scheme' replacing 'Mark Scheme'). Keep this list current as waves discover more>"
     ]
   },
+  "vault": {
+    "status": "<pending | building | complete | adopted>",
+    "sps_total": null,
+    "sps_done": 0,
+    "batches_done": 0,
+    "next_sp": null,
+    "q3_focus": "<subject-skills focus for the vault build's Q3, e.g. 'mathematical skills'; 'skip' to omit>",
+    "adopted_coverage_profile": "<adopt-existing-vault path only: which of R1's nine items the notes carry, and the declared research debt>"
+  },
   "template": {
     "exam_skeleton": [
-      "<one entry per H4 in the per-SP exam section, ratified at /hero-0-setup step 3 — copy NOTHING from another course; worked example lives in templates/README-template.md, not here>"
+      "<one entry per H4 in the per-SP exam section, ratified at the /hero-2-research entry gate — copy NOTHING from another course; worked example lives in templates/README-template.md, not here>"
     ],
-    "has_levelled_questions": "<true | false — ratified at /hero-0-setup step 3, never assumed>",
+    "has_levelled_questions": "<true | false — ratified at the /hero-2-research entry gate, never assumed>",
     "skills_line_label": "<subject skills label, e.g. 'Mathematical skills' (sciences/maths), 'Source-analysis skills' (history)>",
     "no_skills_marker": "<the vault notes' no-skills phrase verbatim, e.g. 'No mathematical skills for this spec point'>"
   },
   "exemplars": [
-    "<path to approved pilot knowledge file>",
-    "<path to one structural-match exemplar (e.g. multi-SP, or no-skills-line SP)>"
+    "<paths to 2 style exemplars max. A new course starts empty: the first wave's user-approved pilot files (/hero-3-write) become the exemplars>"
   ],
   "research_mode": "local",
-  "research_mode_notes": "Mode switches R3 only — R1 (vault) and R2 (converted QP/MS corpus) run unconditionally in every mode; see /hero-0-setup §0 preconditions. local = R3-local-check.md systematic ER sweep (default). hybrid = local first, NLM escalation when a subtopic's sweep returns <3 usable ER passages. nlm = R3-nlm-check.md (for courses whose ER corpus is missing or unconverted — QP/MS corpus still required). Notebook id lives in corpus.notebook_id, verified against the notebook itself via notebook_get; vault-note frontmatter is a cross-check, not the source of truth.",
+  "research_mode_notes": "Mode switches R3 only — R1 (vault) and R2 (converted QP/MS corpus) run unconditionally in every mode. local = R3-local-check.md systematic ER sweep (default). hybrid = local first, NLM escalation when a subtopic's sweep returns <3 usable ER passages. nlm = R3-nlm-check.md (for courses whose ER corpus is missing or unconverted — QP/MS corpus still required). Notebook id lives in corpus.notebook_id, verified against the notebook itself via notebook_get.",
   "model_policy": {
     "research": "sonnet",
     "fixers": "sonnet",
@@ -62,6 +87,7 @@
   "wave_size": "~15 subtopics (max 19)",
   "concurrency_cap": 20,
   "status": {
+    "stage": "<0-setup | 1-vault | 2-research | 3-write | 4-check | 5-publish — coarse pointer; wave-state files carry the detail>",
     "units_complete": [],
     "docs_live": 0,
     "next_unit": 1,
