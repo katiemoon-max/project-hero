@@ -22,9 +22,9 @@ Run AFTER the fixer, BEFORE strip_for_cobalt.py, while the pre-fixer version
 is still what git HEAD (or --ref) holds. Exit code is always 0.
 """
 
+import argparse
 import re
 import subprocess
-import sys
 from pathlib import Path
 
 CERTAINTY_PATTERNS = [
@@ -77,14 +77,17 @@ def added_lines(path: Path, ref: str):
 
 
 def main() -> None:
-    args = sys.argv[1:]
-    ref = "HEAD"
-    if args and args[0] == "--ref":
-        ref = args[1]
-        args = args[2:]
+    ap = argparse.ArgumentParser(
+        description="Scan the lines a fixer ADDED (git diff vs a ref) for "
+        "manufactured-certainty patterns and new quoted spans. Report-only.",
+    )
+    ap.add_argument("--ref", default="HEAD", help="git ref to diff against (default: HEAD)")
+    ap.add_argument("files", nargs="+", metavar="file.md", help="fixer-touched files to sweep")
+    ns = ap.parse_args()
+    ref = ns.ref
 
     total_hits = 0
-    for a in args:
+    for a in ns.files:
         path = Path(a)
         hits = []
         for lineno, line in added_lines(path, ref):

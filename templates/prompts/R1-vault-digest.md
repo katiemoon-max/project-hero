@@ -14,7 +14,7 @@ Write ONE structured brief to `<RESEARCH_DIR>\vault-digest.md`. For multi-SP sub
 6. **Practical links** — core-practical / coursework / fieldwork connections, where the subject has them
 7. **Misconceptions** — student errors listed in the note
 8. **Cobalt commentary** — if the note has a "Cobalt commentary" section, reproduce it in full
-9. **NLM notebook id** — from the note's YAML frontmatter, if present (R3's NLM mode needs it)
+9. **NLM notebook id** — from the note's YAML frontmatter, if present (cross-check for `project.json` → `corpus.notebook_id`, which is the source of truth for R3's NLM mode)
 
 HARD RULES: nothing invented — every line traceable to the note; preserve sitting/date attributions verbatim; no editorialising or added subject content. This digest is grounding evidence for a writer and a checker.
 

@@ -33,6 +33,8 @@ Content is written **student-friendly and polished, as if read by a student prep
 #### Exam Strategy for <Spec Point>  ← [!tip] strategies + mark-scheme conventions + [!warning] errors
 ```
 
+Worked example of `template.exam_skeleton` (from the sciences pilot — an exemplar of the *shape* only, never values to copy: some courses have no sections at all, MCQs interspersed as ordinary parts): `"Multiple Choice (Section A)"` · `"Structured Questions (Section B)"` · `"Levelled 6-Mark Questions (Section B)"`. Ratify your course's real skeleton at `/hero-0-setup` §3.
+
 Rules:
 - **Key concepts are derived per course by research** (local QP/MS/ER corpus + Cobalt RN + ER cross-check) — the same spec point gets a different concept structure on different courses
 - Under each key concept: everything a student needs for the exam, as explanations with worked examples (real past-paper numbers verified against the MS, or clean invented numbers in exemplar style)

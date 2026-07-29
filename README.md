@@ -41,6 +41,8 @@ The design principle throughout: **nothing invented, everything traceable**. Eve
 1. Copy the `skills/` folders into your Claude Code skills directory.
 2. Build (or have) a vault with one note per spec point — `/project-hero` walks you through it.
 3. Convert your past-paper corpus to per-sitting markdown files (QP / MS / ER per sitting).
+
+Steps 2 and 3 are **hard preconditions** for the export pipeline, in every research mode — `/hero-0-setup` refuses to complete without them (`research_mode: nlm` covers a missing *ER* corpus only; a NotebookLM notebook alone is not a corpus).
 4. Run `/hero-0-setup` — it gathers the course facts, ratifies the exam-section template against real papers (hard gate) and writes `project.json`.
 5. Run waves: `/hero-1-research` → `/hero-2-write` → `/hero-3-check` → `/hero-4-publish`. Use `/hero` any time to re-orient.
 
@@ -48,7 +50,7 @@ The design principle throughout: **nothing invented, everything traceable**. Eve
 
 - **Claude Code** with the Cobalt content MCP (`createDocument` / `updateDocument` / `getCourseStructure` / `searchRevisionNotes` etc.)
 - **NotebookLM MCP** — required for the `/project-hero` vault build; optional for the export pipeline (`research_mode: "nlm"` or `"hybrid"`)
-- **Python 3.9+** with `commonmark` for the starred-ref scripts: `pip install -r scripts/requirements.txt`
+- **Python 3.9+** with `commonmark` for the starred-ref scripts: `pip install -r scripts/requirements.txt`. On PEP 668-managed Pythons (e.g. Homebrew) plain `pip install` is blocked — use a venv, or `pip install --user --break-system-packages -r scripts/requirements.txt`
 - **git** — the fixer-diff sweep diffs fixer output against the pre-fixer state, so knowledge-file masters should be committed before fixers run
 
 ## Key invariants (do not relax)

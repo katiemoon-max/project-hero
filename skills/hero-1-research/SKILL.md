@@ -7,6 +7,8 @@ description: Project Hero wave research phase. Creates the wave-state file, then
 
 Read `project.json` and the pipeline blueprint `WRITER-SLICE.md` in the project directory first. One wave ≈ 15 subtopics (max ~19). Concurrency cap per project.json — queue and feed on completion notifications.
 
+**Preconditions (from `/hero-0-setup` §0):** a per-SP vault and a converted local QP/MS corpus. R1 and R2 run unconditionally in every research mode — `research_mode` switches R3 only. If `paths.vault_notes` or `paths.corpus_root` points at nothing usable, STOP and send the user back to `/hero-0-setup` — an empty vault digest makes every downstream gate pass trivially, so running anyway fails silently, not loudly.
+
 ## Steps
 
 1. **Create `research/<unit-key>/_wave<N>-state.md`** from the previous wave's structure: model mix line, per-subtopic stage grid (R1|R2|R3|W|C|F|S), SECTION/TOPIC/ids from `sp-mapping.json`, multi-SP SP_NAMES tables, and — before anything launches — confirm the previous wave's "upstream pack corrections owed" list is empty.
@@ -16,7 +18,7 @@ Read `project.json` and the pipeline blueprint `WRITER-SLICE.md` in the project 
 5. **R3 after that subtopic's R2 completes — hard gate.** R3's coverage gate silently degrades if R2 hasn't finished (its section 4 becomes a superset, not a gap list). Mode per project.json (`local` is the default):
    - `local` — `prompts/R3-local-check.md`: systematic per-sitting ER sweep, verbatim quotes with file/line refs by construction (kills the NLM-mistranscription defect class). Same output filename/skeleton as the NLM variant
    - `hybrid` — local first; NLM escalation only where a subtopic's sweep returns fewer than ~3 usable ER passages
-   - `nlm` — `prompts/R3-nlm-check.md` as written (apparatus gate + coverage gate); for courses without a converted ER corpus
+   - `nlm` — `prompts/R3-nlm-check.md` as written (apparatus gate + coverage gate); for courses whose ER corpus is missing or unconverted (QP/MS corpus still required — its gates verify against local files)
 6. **Top up R2** from each R3's section-4 gap list before the writer runs. Where R3 and R2/digest disagree, the orchestrator reads the paper — never average agents.
 7. Update the wave-state grid as each stage completes. Record every ruling inline — the wave-state file is the working memory.
 

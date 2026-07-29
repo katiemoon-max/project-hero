@@ -1,14 +1,14 @@
 # R3 — NLM Cross-Check Agent (Project Hero writer slice)
 
-The NotebookLM variant of the R3 stage — for courses without a converted ER corpus, or as an escalation when the local sweep runs thin.
+The NotebookLM variant of the R3 stage — for courses whose **ER** corpus is missing or unconverted, or as an escalation when the local sweep runs thin. A converted local QP/MS corpus is still required: the verification and apparatus gates below check every claim against local files, so with no local corpus every claim lands in section 3 and this stage produces zero citable content (see `/hero-0-setup` §0).
 
-You will be given parameters: SUBTOPIC, UNIT, SP_NAMES, CORPUS_DIR, RESEARCH_DIR, NOTEBOOK_ID (or "read from digest").
+You will be given parameters: SUBTOPIC, UNIT, SP_NAMES, CORPUS_DIR, RESEARCH_DIR, NOTEBOOK_ID (or "read from project.json" — `corpus.notebook_id`; the R1 digest's final section is a fallback cross-check).
 
-First read `<RESEARCH_DIR>\vault-digest.md` (note which ER insights/sittings it already lists per SP; the notebook id is in its final section if not supplied).
+First read `<RESEARCH_DIR>\vault-digest.md` (note which ER insights/sittings it already lists per SP).
 
 Use ToolSearch ("select:mcp__notebooklm__notebook_query") to load the query tool, then query the notebook (2–3 targeted questions max) about: examiner-reported common errors on these spec points in this unit's papers; typical question forms; mark-scheme conventions. Ask for sitting citations.
 
-VERIFICATION GATE (the critical part): for every claim NLM attributes to a sitting NOT already in the R1 brief, verify against the local corpus before it may be cited: grep the matching file in `<CORPUS_DIR>` for the claimed wording, AND check the surrounding question context actually belongs to this spec point (NLM's most common failure is a real quote attached to the wrong topic — check what the question is about, not just that the words exist). Assume attributions are wrong until verified. Known corpus casualties (`project.json` → `corpus.known_casualties`) make a claim unverifiable — treat it as such.
+VERIFICATION GATE (the critical part): for every claim NLM attributes to a sitting NOT already in the R1 brief, verify against the local corpus before it may be cited: grep the matching file in `<CORPUS_DIR>` for the claimed wording, AND check the surrounding question context actually belongs to this spec point (NLM's most common failure is a real quote attached to the wrong topic — check what the question is about, not just that the words exist). Assume attributions are wrong until verified. Known corpus casualties (`project.json` → `corpus.known_casualties` — entries may be local file paths or notebook source titles; never cite either kind) make a claim unverifiable — treat it as such.
 
 **APPARATUS / SET-UP GATE (earned defect).** Sitting + topic agreement is NOT enough. Whenever NLM characterises a question — "a double-slit question", "a series circuit", "a source-comparison question", "a supply-and-demand diagram" — open the QP (and MS) for that question and confirm the *set-up it describes is actually the one in the paper*. In the pilot build NLM described two diffraction-**grating** questions as "double-slit"; sitting and topic both checked out, so the claim passed the gate and reached the writer. Check specifically:
 - the apparatus/source/material named in the stem

@@ -28,7 +28,7 @@ For EVERY sitting in the unit's corpus that has an Examiner report file:
 ## Hard rules
 
 - Every number/count claim: per-file `grep -c` only, never `files_with_matches` totals
-- Known corpus casualties: check `project.json` → `corpus.known_casualties` and the unit's wave-state file for the current list — never cite a file on it
+- Known corpus casualties: check `project.json` → `corpus.known_casualties` and the unit's wave-state file for the current list — never cite an item on it (file path or notebook source title)
 - ESCALATION_NOTE: if the orchestrator has authorised NLM escalation and your sweep for a subtopic comes back genuinely thin (fewer than ~3 usable ER passages across the corpus), say so explicitly in the Summary and recommend an NLM escalation query — do NOT run one yourself unless the parameters include a NOTEBOOK_ID and say to
 
 Return: counts per output section + the 2–3 most valuable verified insights + any data-quality flags.

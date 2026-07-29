@@ -4,7 +4,7 @@ You will be given parameters: SUBTOPIC, UNIT, SP_NAMES, CORPUS_DIR, RESEARCH_DIR
 
 First read `<RESEARCH_DIR>\vault-digest.md` — its per-SP exam-appearance tables list every sitting/question where the spec point(s) appeared.
 
-Corpus: `<CORPUS_DIR>` — converted `.md` files per sitting (question paper / mark scheme / examiner report; the exact naming convention is in `project.json` → `corpus.file_naming`). NOTE: resit/variant sittings (e.g. "(A)"-suffixed) are SEPARATE sittings with separate files — verify which variant holds the question before extracting. Known corpus casualties (mojibake files, lost tables) are listed in `project.json` → `corpus.known_casualties` and the wave-state file — never cite a file on that list.
+Corpus: `<CORPUS_DIR>` — converted `.md` files per sitting (question paper / mark scheme / examiner report; the exact naming convention is in `project.json` → `corpus.file_naming`). NOTE: resit/variant sittings (e.g. "(A)"-suffixed) are SEPARATE sittings with separate files — verify which variant holds the question before extracting. Known corpus casualties are listed in `project.json` → `corpus.known_casualties` and the wave-state file — never cite an item on that list (entries are file paths for a local corpus, source titles for notebook sources).
 
 Task: pick the strongest candidates from the appearance table(s) for (a) worked examples and (b) per-format marking-point blocks — cover the formats that actually occur in this course (MCQ vs structured vs levelled/extended-response; calculation vs qualitative). For multi-SP subtopics cover each SP. For each chosen question extract to `<RESEARCH_DIR>\ms-extracts.md` (grouped by SP):
 
