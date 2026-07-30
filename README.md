@@ -43,22 +43,23 @@ A second principle: **token efficiency by construction**. Research agents grep a
 | `templates/project.json.template` | The single per-course config: course facts, ratified structure, corpus + conversion status, vault state, exam-section skeleton, model policy, quality gates |
 | `templates/README-template.md` | Project README skeleton incl. the knowledge-file template rules block |
 | `templates/WRITER-SLICE.md` | The pipeline blueprint — model mix rationale, stage design, failure modes |
-| `scripts/` | Build/QA scripts: `build_mapping.py` (adopted-vault reconciliation), `preflight_sweep.py`, `strip_for_cobalt.py`, `protect_starred_refs.py`, `verify_starred_refs.py`, `fixer_diff_sweep.py` |
+| `scripts/` | Build/QA scripts: `convert_pdfs.py` (PDF → markdown corpus conversion, PyMuPDF), `build_mapping.py` (adopted-vault reconciliation), `preflight_sweep.py`, `strip_for_cobalt.py`, `protect_starred_refs.py`, `verify_starred_refs.py`, `fixer_diff_sweep.py` |
 
 ## Getting started
 
-1. Copy the `skills/` folders into your Claude Code skills directory.
-2. Run `/hero-0-setup` — it fetches and ratifies the course structure, sets up the notebook, kicks off corpus conversion and writes `project.json`.
-3. Run `/hero-1-vault` to build the vault batch by batch (or adopt an existing per-SP vault via its verification path).
-4. Run waves: `/hero-2-research` → `/hero-3-write` → `/hero-4-check` → `/hero-5-publish`. Use `/hero` any time to re-orient.
+1. **Get the source PDFs on disk first** — every sitting's question paper and mark scheme (plus examiner reports where published). A Chrome bulk-PDF-extractor extension pointed at the board's past-paper pages works well (login-gated papers may need a teacher-portal login or the SME internal store). Stage 0 verifies this inventory and refuses to proceed without it.
+2. Copy the `skills/` folders into your Claude Code skills directory.
+3. Run `/hero-0-setup` — it fetches and ratifies the course structure, verifies the PDF inventory, sets up the notebook, kicks off corpus conversion (`scripts/convert_pdfs.py`) and the Cobalt commentary extraction, and writes `project.json`.
+4. Run `/hero-1-vault` to build the vault batch by batch (or adopt an existing per-SP vault via its verification path).
+5. Run waves: `/hero-2-research` → `/hero-3-write` → `/hero-4-check` → `/hero-5-publish`. Use `/hero` any time to re-orient.
 
-The converted QP/MS corpus is a **hard precondition** for the research stage in every research mode (`research_mode: nlm` covers a missing *ER* corpus only; a NotebookLM notebook alone is not a corpus) — which is why stage 0 starts the conversion early and `/hero-2-research` refuses to launch a wave until it is complete.
+The converted QP/MS corpus is a **hard precondition** for the research stage in every research mode (`research_mode: nlm` covers a missing *ER* corpus only; a NotebookLM notebook alone is not a corpus) — which is why stage 0 requires the PDFs on disk, starts the conversion early, and `/hero-2-research` refuses to launch a wave until it is complete.
 
 ## Requirements
 
 - **Claude Code** with the Cobalt content MCP (`createDocument` / `updateDocument` / `getCourseStructure` / `searchRevisionNotes` etc.)
 - **NotebookLM MCP** — required for the `/hero-1-vault` build; optional for the wave stages (`research_mode: "nlm"` or `"hybrid"`)
-- **Python 3.9+** with `commonmark` for the starred-ref scripts: `pip install -r scripts/requirements.txt`. On PEP 668-managed Pythons (e.g. Homebrew) plain `pip install` is blocked — use a venv, or `pip install --user --break-system-packages -r scripts/requirements.txt`
+- **Python 3.9+** with `commonmark` (starred-ref scripts) and `pymupdf` (corpus conversion): `pip install -r scripts/requirements.txt`. On PEP 668-managed Pythons (e.g. Homebrew) plain `pip install` is blocked — use a venv, or `pip install --user --break-system-packages -r scripts/requirements.txt`
 - **git** — the fixer-diff sweep diffs fixer output against the pre-fixer state, so knowledge-file masters should be committed before fixers run
 
 ## Key invariants (do not relax)

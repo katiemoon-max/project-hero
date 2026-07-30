@@ -14,11 +14,11 @@
   "paths": {
     "project_dir": "<absolute path to this project directory>",
     "vault_notes": "<absolute path to the per-spec-point vault (chosen at /hero-1-vault step 7)>",
-    "corpus_root": "<absolute path to the converted past-paper corpus (QP/MS/ER .md per sitting)>",
+    "corpus_root": "<absolute path to the past-paper corpus — source PDFs verified on disk at /hero-0-setup §3, converted .md per sitting from §5>",
     "board_conventions": "<absolute path to the board marking-conventions file, or null until extracted>",
     "cobalt_structure": "cobalt-structure.json",
     "syllabus_cross_check": "<path to the downloaded tracker CSV used for the §2 cross-check (CSV preferred; G-sheet URL if that's what was used)>",
-    "cobalt_content": "<path to the extracted Cobalt commentary/ET&T file>",
+    "cobalt_content": "<path to the extracted Cobalt commentary/ET&T file — extraction kicked off at /hero-0-setup §6; null only with an explicit dated ruling, never a silent deferral>",
     "sp_mapping": "sp-mapping.json",
     "manifest": "upload-manifest.json",
     "prompts": "prompts",
@@ -40,9 +40,9 @@
     "unit_dir_pattern": "<how unit/paper subdirectories are named, e.g. 'Unit <N>'>",
     "file_naming": "<per-sitting file naming, e.g. '<YYYY> <Mon> - Question paper.md / - Mark scheme.md / - Examiner report.md'>",
     "sitting_variants": "<how resit/variant sittings are marked, e.g. '(A)'-suffixed sittings are separate files>",
-    "notebook_id": "<NotebookLM notebook id — verified with notebook_get at /hero-0-setup §3; required for the vault build and for hybrid/nlm research modes>",
+    "notebook_id": "<NotebookLM notebook id — verified with notebook_get at /hero-0-setup §4; required for the vault build and for hybrid/nlm research modes>",
     "conversion": {
-      "status": "<pending | running | complete — kicked off at /hero-0-setup §4; /hero-2-research gates on complete>",
+      "status": "<pending | running | complete — kicked off at /hero-0-setup §5 via scripts/convert_pdfs.py; /hero-2-research gates on complete>",
       "notes": "<converter used, repair passes owed, sittings still outstanding>"
     },
     "known_casualties": [

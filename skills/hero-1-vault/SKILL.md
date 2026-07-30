@@ -52,20 +52,7 @@ Always run with per-batch confirmation. Never run autonomously through to comple
 Everything material was gathered at `/hero-0-setup` — verify it rather than re-gathering:
 
 1. **Notebook**: `corpus.notebook_id` from `project.json`, verified live with `mcp__notebooklm__notebook_get` (title + source list — the notebook must contain past papers, mark schemes, examiner reports, the specification PDF and the extracted Cobalt content file; without them, citations will be thin or fabricated). If the MCP is unauthenticated, run its auth setup — browser sign-in once, cookies persist.
-2. **Cobalt content file**: the path recorded at stage 0 exists. If the extraction was deferred, give the user this prompt to run in a separate session and pause until done:
-
-```
-Extract all commentary and Examiner Tips & Tricks from [COURSE] in Cobalt.
-Use the sme-content MCP. For every published question and question part, find:
-- Commentary — text wrapped in $c{...} sequences (renders as blue text in the
-	Cobalt UI). This is in the answer modal of structured questions.
-- Examiner Tips & Tricks — text between **Examiner Tips and Tricks** and
-	**End of Examiner Tips and Tricks**.
-Organise the output as a markdown file grouped by spec point. For each entry,
-include the spec point(s) it's tagged to and label it as "Commentary" or
-"Examiner Tips and Tricks".
-Save the file to my Desktop as [COURSE]-Cobalt-Content.md.
-```
+2. **Cobalt content file**: `paths.cobalt_content` points at a file that exists. The extraction is a stage-0 job (`/hero-0-setup` §6, which carries the extraction prompt). If the path is null WITH a dated ruling recorded there, the build proceeds without that layer by explicit decision. If it is null with no ruling, the extraction was missed: run `/hero-0-setup` §6 now (background agent or separate session — it is a big MCP crawl) and pause the build until the file lands.
 
 3. **Structure**: `project.json` → `structure.ratified` has a date (the Cobalt-tree/CSV cross-check gate was passed). Never build against an unratified structure.
 4. **Corpus conversion**: note `corpus.conversion.status` — it should be running or complete in the background; it does not block the vault build.
