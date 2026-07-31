@@ -7,6 +7,8 @@ description: Stage 5 of the Project Hero pipeline — wave publish. Runs protect
 
 Read `project.json` and the wave-state file. Upload agent: research tier (default Sonnet). **`createDocument` has no delete or move — never create twice; fixes to live docs go through `updateDocument`.**
 
+**Duplicate-SP groups** (`primary_id` + `alias_ids` in `sp-mapping.json` — F15): one note serves the whole group, but **every Cobalt id in the group still exists and still needs publishing** — the upload must satisfy the primary AND every alias id, and manifest/parity counts are per group, never per primary alone.
+
 ## Gates (in order, all mandatory)
 
 1. `scripts/protect_starred_refs.py` on the wave's masters (bold Example labels so bare `Q*` refs cannot break emphasis; refs stay UNESCAPED — `Q*16`, never `Q\*16`)

@@ -16,6 +16,7 @@ Launch: "Follow ALL instructions in `prompts/WRITER.md`" + parameters — SUBTOP
 ## Orchestrator rules
 
 - Multi-SP subtopics: SP_NAMES order and spelling come from `sp-mapping.json`, never from vault filenames
+- Duplicate-SP groups (`primary_id` + `alias_ids` in `sp-mapping.json` — F15): **one note per group, authored once** against the primary id. Never launch a second writer for an alias id; the single note satisfies every Cobalt id in its group
 - Subtopic names containing colons: the YAML `subtopic:` value must be double-quoted (upload breaks otherwise)
 - Writers report their own self-check results (certainty audit, direction audit, symbol sweep) — record self-caught items in the wave-state file, but **never trim the checker on the strength of a writer self-check** (ratified negative result from the pilot build: writer-side hardening did not reduce the blocker class reaching the checker)
 - Mark W complete in the wave-state grid as each draft lands
