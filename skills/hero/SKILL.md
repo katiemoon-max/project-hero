@@ -16,9 +16,9 @@ You are the status orchestrator for a Project Hero course-knowledge build. The l
    - `upload-manifest.json` — live document count
 3. **Print a compact status block:**
    - Course + Cobalt course id
-   - Lifecycle stage: structure ratified? · vault (building X/Y, complete, or adopted) · corpus conversion (pending/running/complete) · research entry gates passed (skeleton ratified?) · waves
+   - Lifecycle stage: structure ratified? · vault (building X/Y, complete, or adopted) · corpus conversion (pending/running/complete, **and whether the table-integrity gate passed** — `corpus.conversion.table_gate_passed`) · research entry gates passed (skeleton ratified?) · waves
    - If in waves: units complete / in progress / remaining (subtopic counts), and the current wave's per-subtopic stages (R1 / R2 / R3 / W / C / F / S / uploaded) from the wave-state grid
-   - Open gates: unratified structure or skeleton, incomplete conversion, unapplied pack corrections, pending prompt hardenings, checker reports awaiting fixers, sweeps not yet run, upload HOLDs awaiting the user
+   - Open gates: unratified structure or skeleton, incomplete conversion, a conversion whose table-integrity gate has not passed, unapplied pack corrections, pending prompt hardenings, checker reports awaiting fixers, sweeps not yet run, upload HOLDs awaiting the user
    - Any ⚠️ rulings at the top of the wave-state file
 4. **Name the next command**: one of `/hero-1-vault`, `/hero-2-research`, `/hero-3-write`, `/hero-4-check`, `/hero-5-publish` — or the specific unblocking action (e.g. "corpus conversion still running — finish it before `/hero-2-research`", or "apply the pack corrections at the top of the wave-state file before launching wave N+1").
 

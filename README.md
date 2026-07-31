@@ -43,7 +43,7 @@ A second principle: **token efficiency by construction**. Research agents grep a
 | `templates/project.json.template` | The single per-course config: course facts, ratified structure, corpus + conversion status, vault state, exam-section skeleton, model policy, quality gates |
 | `templates/README-template.md` | Project README skeleton incl. the knowledge-file template rules block |
 | `templates/WRITER-SLICE.md` | The pipeline blueprint — model mix rationale, stage design, failure modes |
-| `scripts/` | Build/QA scripts: `convert_pdfs.py` (PDF → markdown corpus conversion, PyMuPDF), `build_mapping.py` (adopted-vault reconciliation), `preflight_sweep.py`, `strip_for_cobalt.py`, `protect_starred_refs.py`, `verify_starred_refs.py`, `fixer_diff_sweep.py` |
+| `scripts/` | Build/QA scripts: `convert_pdfs.py` (PDF → markdown corpus conversion, docling, with a table-integrity gate), `build_mapping.py` (adopted-vault reconciliation), `preflight_sweep.py`, `strip_for_cobalt.py`, `protect_starred_refs.py`, `verify_starred_refs.py`, `fixer_diff_sweep.py` |
 
 ## Getting started
 
@@ -55,11 +55,13 @@ A second principle: **token efficiency by construction**. Research agents grep a
 
 The converted QP/MS corpus is a **hard precondition** for the research stage in every research mode (`research_mode: nlm` covers a missing *ER* corpus only; a NotebookLM notebook alone is not a corpus) — which is why stage 0 requires the PDFs on disk, starts the conversion early, and `/hero-2-research` refuses to launch a wave until it is complete.
 
+"Complete" means the **table-integrity gate passed**, not just that the run finished. Mark schemes are tables, and the conversion is the only thing the research agents ever see, so `convert_pdfs.py` fails loudly (exit 1) if any mark scheme converted to zero pipe characters — or if no file matched the mark-scheme name pattern at all, since a gate that checks nothing passes vacuously. Audit a corpus converted elsewhere with `python scripts/convert_pdfs.py <corpus_root> --verify`.
+
 ## Requirements
 
 - **Claude Code** with the Cobalt content MCP (`createDocument` / `updateDocument` / `getCourseStructure` / `searchRevisionNotes` etc.)
 - **NotebookLM MCP** — required for the `/hero-1-vault` build; optional for the wave stages (`research_mode: "nlm"` or `"hybrid"`)
-- **Python 3.9+** with `commonmark` (starred-ref scripts) and `pymupdf` (corpus conversion): `pip install -r scripts/requirements.txt`. On PEP 668-managed Pythons (e.g. Homebrew) plain `pip install` is blocked — use a venv, or `pip install --user --break-system-packages -r scripts/requirements.txt`
+- **Python 3.9+** with `commonmark` (starred-ref scripts) and `docling` (corpus conversion — a table-aware converter is mandatory, not a preference: mark schemes *are* tables and a text-layer extractor destroys them silently, see F17): `pip install -r scripts/requirements.txt`. First conversion run downloads docling's layout + table models (~500 MB, once per machine) and costs roughly 2–3 s per page on CPU. On PEP 668-managed Pythons (e.g. Homebrew) plain `pip install` is blocked — use a venv, or `pip install --user --break-system-packages -r scripts/requirements.txt`
 - **git** — the fixer-diff sweep diffs fixer output against the pre-fixer state, so knowledge-file masters should be committed before fixers run
 
 ## Key invariants (do not relax)

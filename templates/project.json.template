@@ -43,7 +43,10 @@
     "notebook_id": "<NotebookLM notebook id — verified with notebook_get at /hero-0-setup §4; required for the vault build and for hybrid/nlm research modes>",
     "conversion": {
       "status": "<pending | running | complete — kicked off at /hero-0-setup §5 via scripts/convert_pdfs.py; /hero-2-research gates on complete>",
-      "notes": "<converter used, repair passes owed, sittings still outstanding>"
+      "engine": "<converter that produced the corpus, e.g. 'docling (convert_pdfs.py)'. A text-layer extractor is NOT acceptable for mark schemes — see F17>",
+      "table_gate_passed": null,
+      "table_gate_notes": "<date of the last passing run + mark-scheme count checked; from conversion-report.json at the corpus root. status may not be 'complete' while this is false>",
+      "notes": "<repair passes owed, sittings still outstanding>"
     },
     "known_casualties": [
       "<unusable items — never cite. Local corpus: file paths (mojibake, lost tables). Notebook corpus: source titles (missing/duplicate sources, or variants such as 'Revised Mark Scheme' replacing 'Mark Scheme'). Keep this list current as waves discover more>"
