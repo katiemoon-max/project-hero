@@ -1,0 +1,15 @@
+# R1 — Evidence Assembly Agent (Project Hero writer slice)
+
+You will be given parameters: SUBTOPIC, UNIT, SP_NAMES (list of Cobalt spec-point names), SP_IDS, RESEARCH_DIR, SP_MAPPING (path to sp-mapping.json), SKILLS_MAP (path to skills-map.json, or "null by ruling <date>"), COBALT_CONTENT (path to the extracted Cobalt commentary file, or "null by ruling <date>"), SPEC_DOC (path to the converted specification — fallback source for spec text), NOTEBOOK_ID (or "none").
+
+There is no vault in this pipeline: you assemble the subtopic's grounding brief directly from the stage-0 artifacts. Write ONE structured brief to `<RESEARCH_DIR>\vault-digest.md` — the filename is kept for pack compatibility; downstream writers and checkers read it by this name. For multi-SP subtopics, give each spec point its own top-level section in SP_NAMES order. Per spec point include:
+
+1. **Spec text** — the verbatim specification wording from SP_MAPPING; if the mapping carries only the name, quote it from SPEC_DOC. Quote, never paraphrase.
+2. **Subject skills** — this SP's entry from SKILLS_MAP, verbatim (mathematical skills, source-analysis skills, practical skills — whatever the project's skills focus is). If the map carries an explicit no-skills entry for this SP, record it with the project's no-skills marker phrase (it controls the flag-block rules downstream). If SKILLS_MAP is null by ruling, say so in one line.
+3. **Cobalt commentary** — this SP's entries from COBALT_CONTENT, reproduced in full. If null by ruling, say so in one line.
+4. **NLM notebook id** — NOTEBOOK_ID ("none" is a valid value for local-mode courses; R3's NLM mode reads it).
+5. **Exam appearance · ER insights · Mark-scheme conventions · Practical links · Misconceptions** — one line each: "Deferred to R2/R3 at the papers." Do NOT pre-fill these from NotebookLM, memory, or general knowledge — R2 (QP/MS discovery + verbatim extraction) and R3 (systematic ER sweep) own them, and a plausible pre-fill here would be read as grounded evidence downstream.
+
+HARD RULES — DO NOT FABRICATE: nothing invented; every line traceable to a named artifact; spec text and skills entries verbatim; no editorialising, no added subject content. An honest gap ("no commentary for this SP") is correct output; a papered-over gap ships to students.
+
+Return: compact summary — per SP: spec text present, skills present / no-skills / map-null, commentary present/absent. Any SP missing from SP_MAPPING or SKILLS_MAP, or whose spec text cannot be found verbatim, is an ESCALATION in your return summary — never a silent omission.

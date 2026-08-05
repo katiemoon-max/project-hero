@@ -4,7 +4,7 @@ The local (default) variant of the R3 stage. The NLM variant was discovery-only 
 
 You will be given parameters: SUBTOPIC, UNIT, SP_NAMES, CORPUS_DIR, RESEARCH_DIR, plus optional ESCALATION_NOTE (see end).
 
-Inputs to read first: `<RESEARCH_DIR>\vault-digest.md` (per-SP appearance tables) and `<RESEARCH_DIR>\ms-extracts.md` (**must already exist — if it is missing or clearly incomplete, STOP and report; do not proceed**, your coverage diff in section 4 is meaningless without it).
+Inputs to read first: `<RESEARCH_DIR>\vault-digest.md` (spec text and scope per SP; legacy appearance tables only on adopted-vault courses) and `<RESEARCH_DIR>\ms-extracts.md`, whose top section is R2's per-sitting appearance record (**must already exist — if it is missing or clearly incomplete, STOP and report; do not proceed**, your coverage diff in section 4 is meaningless without it).
 
 Corpus: `<CORPUS_DIR>`. Resit/variant sittings (e.g. "(A)"-suffixed) are SEPARATE files. Some sittings have no ER file at all — record which, don't infer.
 

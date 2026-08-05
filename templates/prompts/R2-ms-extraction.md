@@ -2,11 +2,11 @@
 
 You will be given parameters: SUBTOPIC, UNIT, SP_NAMES, CORPUS_DIR, RESEARCH_DIR.
 
-First read `<RESEARCH_DIR>\vault-digest.md` — its per-SP exam-appearance tables list every sitting/question where the spec point(s) appeared.
+First read `<RESEARCH_DIR>\vault-digest.md` for each SP's verbatim spec text and scope. Then **build the appearance record yourself**: enumerate every sitting in the unit's corpus (QP and MS — name each file explicitly, never directory-glob), sweep each for the spec points' concepts, equations and command phrases (the search-hygiene rules below apply), and record an appearance row (sitting, question ref, format, marks, one-line what-was-asked) for every hit. Write this record at the top of `ms-extracts.md` — it replaces the retired vault's appearance table as the pack's per-sitting record, and R3's coverage gate diffs against it. Where the digest carries a legacy vault appearance table (adopted-vault courses only), treat its rows as leads to verify at the papers — those tables have erred in BOTH directions in production (whole rows over-claimed, whole sittings missing); your own corpus sweep is the authoritative record.
 
 Corpus: `<CORPUS_DIR>` — converted `.md` files per sitting (question paper / mark scheme / examiner report; the exact naming convention is in `project.json` → `corpus.file_naming`). NOTE: resit/variant sittings (e.g. "(A)"-suffixed) are SEPARATE sittings with separate files — verify which variant holds the question before extracting. Known corpus casualties are listed in `project.json` → `corpus.known_casualties` and the wave-state file — never cite an item on that list (entries are file paths for a local corpus, source titles for notebook sources).
 
-Task: pick the strongest candidates from the appearance table(s) for (a) worked examples and (b) per-format marking-point blocks — cover the formats that actually occur in this course (MCQ vs structured vs levelled/extended-response; calculation vs qualitative). For multi-SP subtopics cover each SP. For each chosen question extract to `<RESEARCH_DIR>\ms-extracts.md` (grouped by SP):
+Task: pick the strongest candidates from your appearance record for (a) worked examples and (b) per-format marking-point blocks — cover the formats that actually occur in this course (MCQ vs structured vs levelled/extended-response; calculation vs qualitative). For multi-SP subtopics cover each SP. For each chosen question extract to `<RESEARCH_DIR>\ms-extracts.md` (grouped by SP):
 
 - Sitting + question ref (full month + main question number, e.g. "June 2023 Q17"; asterisked/starred refs as "Q*14" where the board marks them)
 - VERBATIM question stem from the QP, incl. MCQ options where relevant (note figure dependence as [figure: description])

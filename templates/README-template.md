@@ -1,18 +1,18 @@
 # Project Hero — <Board Qualification Subject> → Cobalt Export
 
-Converting the completed <course> vault (<N> spec-point notes at `<vault_notes path>`) into Cobalt course knowledge files and uploading them to the docs store on course `<crs_...>`.
+Building Cobalt course knowledge files for <course> — one per subtopic, grounded in the ratified structure and the converted past-paper corpus — and uploading them to the docs store on course `<crs_...>`.
 
 ## Pipeline
 
-1. Structure ratified + `sp-mapping.json` generated at `/hero-0-setup` (Cobalt tree diffed against the tracker; the vault is Cobalt-keyed by construction). `scripts/build_mapping.py` is only needed on the adopt-existing-vault path, where filenames may need reconciling: name normalisation folds curly apostrophes; genuine name differences go in the script's ALIASES map (Cobalt names are authoritative — no vault rename needed)
-2. Per-wave research → write → check → publish via the `/hero-2` … `/hero-5` skills, using the stage prompts in `prompts/`
-3. **Strip for Cobalt**: `scripts/strip_for_cobalt.py <file.md>` → `<file>.cobalt.md`. The Cobalt doc viewer renders plain markdown only — Obsidian callouts and blockquotes show as literal `>` text. The script converts `[!tip]`/`[!warning]` callouts to headings one level below their section (warnings suffixed " (Common Error)") and unquotes everything incl. the `> **Specification:**` lines. **Vault masters KEEP callouts** (proofing markers); only the `.cobalt.md` variant is uploaded
+1. Structure ratified + `sp-mapping.json` generated at `/hero-0-setup` (Cobalt tree diffed against the tracker; every downstream artifact is Cobalt-keyed by construction). `scripts/build_mapping.py` is only needed on the adopt-a-legacy-vault path, where filenames may need reconciling: name normalisation folds curly apostrophes; genuine name differences go in the script's ALIASES map (Cobalt names are authoritative — no vault rename needed)
+2. Per-wave research → write → check → publish via the `/hero-1` … `/hero-4` skills, using the stage prompts in `prompts/`
+3. **Strip for Cobalt**: `scripts/strip_for_cobalt.py <file.md>` → `<file>.cobalt.md`. The Cobalt doc viewer renders plain markdown only — Obsidian callouts and blockquotes show as literal `>` text. The script converts `[!tip]`/`[!warning]` callouts to headings one level below their section (warnings suffixed " (Common Error)") and unquotes everything incl. the `> **Specification:**` lines. **Knowledge-file masters KEEP callouts** (proofing markers); only the `.cobalt.md` variant is uploaded
 4. Upload the `.cobalt.md` content: `createDocument` per file (title = subtopic name), record `document_id` in the manifest, read chunk/warning summary. Fixes go through `updateDocument` with the whole file — **never create twice** (duplicates; no delete API)
 
 ## Conversion rules
 
 - Frontmatter: `section:` / `topic:` / `subtopic:` verbatim Cobalt names (precise scoping; avoids duplicate-SP-name traps across units), `tags: [<subject_slug>, project-hero]`
-- `# Sub-topic: <name>` / `## Spec Point: <name>` — names verbatim from Cobalt structure, never from vault filenames
+- `# Sub-topic: <name>` / `## Spec Point: <name>` — names verbatim from Cobalt structure, never from filenames
 - Spec text stays as the `> **Specification:** …` quote under each spec point heading
 
 ## Template rules — research-driven key concepts
@@ -28,12 +28,12 @@ Content is written **student-friendly and polished, as if read by a student prep
 ### <Key concept 2> …                ← concept list comes from RESEARCH, not a fixed section list
 ### How <Spec Point> Appears in Exams
 #### <exam_skeleton entry 1>         ← one H4 per entry in project.json → template.exam_skeleton
-#### <exam_skeleton entry 2> …          (ratified at the /hero-2-research entry gate — the template check)
+#### <exam_skeleton entry 2> …          (ratified at the /hero-1-research entry gate — the template check)
 #### Command Words for <Spec Point>  ← table: command word | what to do | common traps
 #### Exam Strategy for <Spec Point>  ← [!tip] strategies + mark-scheme conventions + [!warning] errors
 ```
 
-Worked example of `template.exam_skeleton` (from the sciences pilot — an exemplar of the *shape* only, never values to copy: some courses have no sections at all, MCQs interspersed as ordinary parts): `"Multiple Choice (Section A)"` · `"Structured Questions (Section B)"` · `"Levelled 6-Mark Questions (Section B)"`. Ratify your course's real skeleton at the `/hero-2-research` entry gate.
+Worked example of `template.exam_skeleton` (from the sciences pilot — an exemplar of the *shape* only, never values to copy: some courses have no sections at all, MCQs interspersed as ordinary parts): `"Multiple Choice (Section A)"` · `"Structured Questions (Section B)"` · `"Levelled 6-Mark Questions (Section B)"`. Ratify your course's real skeleton at the `/hero-1-research` entry gate.
 
 Rules:
 - **Key concepts are derived per course by research** (local QP/MS/ER corpus + Cobalt RN + ER cross-check) — the same spec point gets a different concept structure on different courses
@@ -45,7 +45,7 @@ Rules:
 - Skills and practical content **integrated contextually** (graphs under a graphs concept, practicals under a measurement concept) — no separate skills section; no Key takeaways section
 - **Flag blocks per spec point:** immediately after each `> **Specification:**` quote, a `**Key terminology:**` line (5–10 load-bearing terms from that spec point's own content, " · " separators, lower case unless proper noun) and — only where the spec point has genuine skills content — a `**<skills_line_label>:**` line (3–6 concrete exam skills in the file's own notation). Strictly scoped to the spec point (no cross-SP or cross-topic bleed); no terminal punctuation
 - No emoji/✅✗ (house style); callouts restricted to `[!tip]`/`[!warning]`
-- The per-sitting exam-appearance table **stays in the process** (vault notes keep it; writers use it as grounding) but is not emitted in the final file
+- The per-sitting exam-appearance table **stays in the process** (R2's appearance record in `ms-extracts.md` carries it; writers use it as grounding) but is not emitted in the final file
 
 ## Standing rules (earned in production)
 

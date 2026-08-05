@@ -42,7 +42,7 @@ so a partial verdict can never be mistaken for the corpus-wide one.
 Requires: pip install docling  (in scripts/requirements.txt). First run downloads
 the layout + table-structure models (~500 MB, once per machine). Budget roughly
 2-3 s per page on CPU (measured: 18-page mark scheme in 42 s) -- start the run
-early, it is designed to work in the background while the vault builds.
+early, it is designed to work in the background while setup completes.
 """
 import argparse
 import json
@@ -182,7 +182,7 @@ def report(records, ms_pattern, root, no_text, scope=None):
         log("CONVERSION GATE FAILED -- NO MARK SCHEMES RECOGNISED")
         log("=" * 72)
         log(f"Nothing under this root matched the mark-scheme pattern: {ms_pattern}")
-        log("Either the corpus has no mark schemes (it must, before /hero-2-research)")
+        log("Either the corpus has no mark schemes (it must, before /hero-1-research)")
         log("or this board names them differently -- pass --ms-pattern to match them.")
         log("The gate is not allowed to pass by checking zero files.")
     if no_text:

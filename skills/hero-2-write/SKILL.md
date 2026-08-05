@@ -1,9 +1,9 @@
 ---
-name: hero-3-write
-description: Stage 3 of the Project Hero pipeline — wave writing. Launches one writer agent per subtopic with the evidence pack, sibling-boundary CAUTIONS and R1 flag rulings. On a course's first wave, opens with a user-ratified pilot of 1–2 subtopics. Requires completed research packs from /hero-2-research.
+name: hero-2-write
+description: Stage 2 of the Project Hero pipeline — wave writing. Launches one writer agent per subtopic with the evidence pack, sibling-boundary CAUTIONS and R1 flag rulings. On a course's first wave, opens with a user-ratified pilot of 1–2 subtopics. Requires completed research packs from /hero-1-research.
 ---
 
-# /hero-3-write — writers
+# /hero-2-write — writers
 
 Read `project.json` and the wave-state file. Writer model per project policy (default Opus).
 
@@ -15,10 +15,10 @@ Launch: "Follow ALL instructions in `prompts/WRITER.md`" + parameters — SUBTOP
 
 ## Orchestrator rules
 
-- Multi-SP subtopics: SP_NAMES order and spelling come from `sp-mapping.json`, never from vault filenames
+- Multi-SP subtopics: SP_NAMES order and spelling come from `sp-mapping.json`, never from legacy vault filenames
 - Duplicate-SP groups (`primary_id` + `alias_ids` in `sp-mapping.json` — F15): **one note per group, authored once** against the primary id. Never launch a second writer for an alias id; the single note satisfies every Cobalt id in its group
 - Subtopic names containing colons: the YAML `subtopic:` value must be double-quoted (upload breaks otherwise)
 - Writers report their own self-check results (certainty audit, direction audit, symbol sweep) — record self-caught items in the wave-state file, but **never trim the checker on the strength of a writer self-check** (ratified negative result from the pilot build: writer-side hardening did not reduce the blocker class reaching the checker)
 - Mark W complete in the wave-state grid as each draft lands
 
-Next: `/hero-4-check` per drafted subtopic (no wave-wide barrier).
+Next: `/hero-3-check` per drafted subtopic (no wave-wide barrier).

@@ -1,10 +1,10 @@
 # R3 — NLM Cross-Check Agent (Project Hero writer slice)
 
-The NotebookLM variant of the R3 stage — for courses whose **ER** corpus is missing or unconverted, or as an escalation when the local sweep runs thin. A converted local QP/MS corpus is still required: the verification and apparatus gates below check every claim against local files, so with no local corpus every claim lands in section 3 and this stage produces zero citable content (which is why corpus conversion starts at `/hero-0-setup` and `/hero-2-research` gates on it being complete).
+The NotebookLM variant of the R3 stage — for courses whose **ER** corpus is missing or unconverted, or as an escalation when the local sweep runs thin. A converted local QP/MS corpus is still required: the verification and apparatus gates below check every claim against local files, so with no local corpus every claim lands in section 3 and this stage produces zero citable content (which is why corpus conversion starts at `/hero-0-setup` and `/hero-1-research` gates on it being complete).
 
 You will be given parameters: SUBTOPIC, UNIT, SP_NAMES, CORPUS_DIR, RESEARCH_DIR, NOTEBOOK_ID (or "read from project.json" — `corpus.notebook_id`; the R1 digest's final section is a fallback cross-check).
 
-First read `<RESEARCH_DIR>\vault-digest.md` (note which ER insights/sittings it already lists per SP).
+First read `<RESEARCH_DIR>\vault-digest.md` (on adopted-vault courses, note which ER insights/sittings it already lists per SP; evidence-assembly digests defer ER content to this stage and list none).
 
 Use ToolSearch ("select:mcp__notebooklm__notebook_query") to load the query tool, then query the notebook (2–3 targeted questions max) about: examiner-reported common errors on these spec points in this unit's papers; typical question forms; mark-scheme conventions. Ask for sitting citations.
 

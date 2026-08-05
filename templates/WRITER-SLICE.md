@@ -1,6 +1,6 @@
 # Writer-Agent Enrichment Slice — pipeline blueprint
 
-The per-subtopic pipeline that turns vault research into a template-compliant enriched knowledge file. One slice = one subtopic. Slices are independent — run in parallel batches (waves).
+The per-subtopic pipeline that turns wave research into a template-compliant enriched knowledge file. One slice = one subtopic. Slices are independent — run in parallel batches (waves).
 
 ## Model mix (ratified after a 5-subtopic calibration wave on the pilot course)
 
@@ -17,7 +17,10 @@ Calibration result: roughly a 3× cost reduction at equal output quality versus 
 | Input | Source |
 |---|---|
 | Subtopic id, name, section, topic, unit, SP ids + names | `sp-mapping.json` `subtopics` |
-| Vault note file(s) for each SP | `sp-mapping.json` `mapping` (`vault_file` per `cobalt_sp_id`) |
+| Spec text per SP | `sp-mapping.json` `mapping` (verbatim; converted specification as fallback) |
+| Skills entry per SP | `skills-map.json` (`paths.skills_map` — direct spec read at stage 0) |
+| Cobalt commentary per SP | `paths.cobalt_content` (extracted at stage 0; null only by dated ruling) |
+| Legacy vault note file(s) per SP | adopted-vault courses only: `sp-mapping.json` `mapping` (`vault_file` per `cobalt_sp_id`) |
 | Cobalt RN content | `searchRevisionNotes(subtopic_id)` → `findRevisionNote` — save to research folder; flag any `$c{` commentary blocks (they carry examiner-style guidance to fold in) |
 | Board conventions | One extraction per course (marking guidance, levelled mechanism, command words) — reused every slice, never re-derived |
 | Exemplars | `project.json` → `exemplars` + the project README's template rules block |
@@ -26,11 +29,11 @@ Working files: `research/<unit-key>/<Subtopic>/` — `rn.md`, `vault-digest.md`,
 
 ## Stage R — research
 
-**R1 — vault digest** (read-only agent)
-Reads the vault SP note(s). Emits a structured brief: verbatim spec text per SP; the per-sitting exam-appearance table; ER insights with sitting attributions; skills/practical content; misconceptions. Nothing invented — everything traceable to the note.
+**R1 — evidence assembly** (read-only agent, `prompts/R1-evidence-assembly.md`)
+Assembles the subtopic's grounding brief (`vault-digest.md` — filename kept for pack compatibility) directly from the stage-0 artifacts: verbatim spec text per SP (sp-mapping), the skills entry or no-skills marker (skills-map), and the Cobalt commentary slice. Exam-appearance, ER and MS evidence are explicitly deferred to R2/R3 — never pre-filled. Nothing invented — everything traceable to a named artifact. *(Adopted-legacy-vault courses run `prompts/R1-vault-digest.md` against the vault notes instead; vault content is leads to verify, never ground truth.)*
 
-**R2 — MS/QP verbatim extraction** (read/grep agent on the corpus)
-Given R1's appearance table, extracts verbatim question stems (QP) and verbatim MS marking points for the strongest worked-example and marking-point candidates. Rules: per-file `grep -c` for any count claim; corrupted conversions recovered from MS example calculations; every worked-example number verified against the MS. Two conversion gotchas produce false "no evidence exists" results: **ER header forms** vary within a corpus (`Question 18` vs `Q18(a)` vs `Q18 (a)` vs `Q 15 (a)`) so absence must be tested against every form; and **`## Page N` markers split paragraphs** — a quote running to a page end must be continued past the marker.
+**R2 — MS/QP discovery + verbatim extraction** (read/grep agent on the corpus)
+Builds the per-sitting appearance record itself — enumerating every sitting in the unit's corpus and sweeping each QP/MS for the spec points — then extracts verbatim question stems (QP) and verbatim MS marking points for the strongest worked-example and marking-point candidates. Rules: per-file `grep -c` for any count claim; corrupted conversions recovered from MS example calculations; every worked-example number verified against the MS. Two conversion gotchas produce false "no evidence exists" results: **ER header forms** vary within a corpus (`Question 18` vs `Q18(a)` vs `Q18 (a)` vs `Q 15 (a)`) so absence must be tested against every form; and **`## Page N` markers split paragraphs** — a quote running to a page end must be continued past the marker.
 
 **R3 — examiner-insight cross-check.** Two modes; `project.json` → `research_mode` decides (**local is the default**; NLM remains available as an escalation when a local sweep runs thin, and for courses without a converted ER corpus):
 
