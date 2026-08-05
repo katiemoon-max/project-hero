@@ -9,9 +9,11 @@ Everything course-specific lives in one config file (`project.json`), created at
 One numbered pipeline, five stages. `/hero` re-orients you at any point.
 
 ```
-/hero-0-setup      course onboarding: Cobalt structure fetched and RATIFIED against the
-                   tracker CSV (hard gate — catches placeholder SPs, missing content,
-                   name drift); paper codes + level designations captured; per-SP skills
+/hero-0-setup      course onboarding: Cobalt structure fetched and RATIFIED by you
+                   (diffed against the tracker CSV where the course has one — the diff
+                   catches placeholder SPs, missing content, name drift; a course with
+                   no Master Syllabus ratifies from the Cobalt tree alone);
+                   paper codes + level designations captured; per-SP skills
                    map read directly from the specification; notebook registered; corpus
                    conversion and Cobalt commentary extraction kicked off; project.json
                    written as the single source of truth
@@ -66,7 +68,7 @@ The converted QP/MS corpus is a **hard precondition** for the research stage in 
 
 ## Key invariants (do not relax)
 
-- The Cobalt structure is ratified against the tracker at stage 0 **by the user** — discrepancies (placeholder SPs, missing content, name drift) get explicit rulings, never silent resolution
+- The Cobalt structure is ratified at stage 0 **by the user** (cross-checked against the tracker where the course has one) — discrepancies (placeholder SPs, missing content, name drift) get explicit rulings, never silent resolution
 - `createDocument` has no delete or move — **never create twice**; fixes to live docs go through `updateDocument`
 - No upload without an explicit human HOLD approval per wave
 - The checker tier is never trimmed and never downgraded below Opus 5

@@ -22,7 +22,7 @@
     "corpus_root": "<absolute path to the past-paper corpus — source PDFs verified on disk at /hero-0-setup §3, converted .md per sitting from §5>",
     "board_conventions": "<absolute path to the board marking-conventions file, or null until extracted>",
     "cobalt_structure": "cobalt-structure.json",
-    "syllabus_cross_check": "<path to the downloaded tracker CSV used for the §2 cross-check (CSV preferred; G-sheet URL if that's what was used)>",
+    "syllabus_cross_check": "<path to the downloaded tracker CSV used for the §2 cross-check (CSV preferred; G-sheet URL if that's what was used); null with a dated ruling in structure.cross_check_findings when the course has no Master Syllabus — ratification then runs from the Cobalt tree alone>",
     "cobalt_content": "<path to the extracted Cobalt commentary/ET&T file — extraction kicked off at /hero-0-setup §6; null only with an explicit dated ruling, never a silent deferral>",
     "sp_mapping": "sp-mapping.json",
     "manifest": "upload-manifest.json",
@@ -32,7 +32,7 @@
     "research": "research"
   },
   "structure": {
-    "ratified": "<YYYY-MM-DD the user ratified the Cobalt-tree/tracker diff at /hero-0-setup §2 — null means DO NOT BUILD>",
+    "ratified": "<YYYY-MM-DD the user ratified the structure at /hero-0-setup §2 (the Cobalt-tree/tracker diff where a tracker exists, the Cobalt tree alone otherwise) — null means DO NOT BUILD>",
     "cross_check_findings": [
       "<each discrepancy + the user's ruling, e.g. '3 video-placeholder SPs in Cobalt, not in tracker -> no_content'>"
     ],
