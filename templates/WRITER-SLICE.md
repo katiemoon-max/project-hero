@@ -46,7 +46,7 @@ Builds the per-sitting appearance record itself — enumerating every sitting in
 ## Stage W — writer (1 agent, `prompts/WRITER.md`)
 
 Composes the master `.md` per the project's template rules using: R1–R3 briefs + RN content + exemplars. Highlights (full rules in the prompt):
-- Key-concept H3s derived from the research (not a fixed list); student-friendly polished prose; worked examples with MS-verified numbers
+- Key-concept H3s derived from the research (not a fixed list); student-friendly polished prose; worked examples with MS-verified numbers and provenance visible on the page (attributed sitting + ref, or genuinely invented — never a past-paper question presented as invented)
 - Flag block per spec point (Key terminology always; the course's skills line only where genuine)
 - First-appearance definitions for every flagged term, per spec point
 - Contextualise-first: key point + actionable strategy in our own words, verbatim MS/ER quote after as evidence

@@ -9,6 +9,10 @@ Read `project.json` and the wave-state file. Writer model per project policy (de
 
 **First wave of a new course: pilot first.** Draft 1–2 subtopics, stop, and get the user's approval of the files before launching the rest of the wave — the approved pilot files become the course's style exemplars (recorded in `project.json` → `exemplars`). Template drift caught at two files costs two files; caught at fifteen it costs the wave.
 
+**Present the pilot unambiguously (earned 2026-08-06).** The approval request LEADS with the exact paths of the drafted files, named as the writer output — never buried as links mid-document. If anything confusable sits within the reviewer's reach — retired vault notes, research packs, batch data (the two generations can share a filename: the pilot course had two different `Acceleration` files) — name it explicitly as NOT the output, or quarantine it first per the `/hero` hard rule. Tell the reviewer where to record feedback (the review note, or back to the orchestrator) — never inside pipeline-owned output directories, which are regenerated. A reviewer opened the retired vault's per-SP notes believing them to be this stage's output and nearly failed the pilot on abandoned files while the real drafts sat behind links.
+
+**Where the two pilot files diverge and both are compliant, that is a prompt gap — surface it, don't bury it.** Present the divergences as a decision table for the user's ruling (the pilot course produced five: worked-example heading attribution, `**Answer:**` line, frontmatter quoting, command-word verbatimness, symbol form in "Where:" lists). Each ruling goes into the project README's template rules and, where it is course-agnostic, back into `prompts/WRITER.md` — the exemplar alone does not stop the next writer diverging on a sixth axis.
+
 ## Per subtopic
 
 Launch: "Follow ALL instructions in `prompts/WRITER.md`" + parameters — SUBTOPIC (verbatim Cobalt name), SECTION, TOPIC, UNIT, SP_NAMES (Cobalt order, verbatim), RESEARCH_DIR, OUTPUT_FILE, CAUTIONS (that subtopic's sibling-boundary rulings + R1 flag decisions + any pack-specific bans from the wave-state file).

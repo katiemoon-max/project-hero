@@ -26,6 +26,7 @@ You are the status orchestrator for a Project Hero course-knowledge build. The l
 ## Hard rules (all earned by defects in production use)
 
 - **Always read the current wave-state file before resuming wave work** — never resume from a handover or this skill alone; a handover's stated counts have been wrong before
+- **Abandoned artifacts are quarantined the moment the ruling lands — never left in place.** When a ruling retires, supersedes or abandons on-disk output (a retired stage's notes, a superseded merge, leftovers a re-run does not regenerate), move it immediately into a dated quarantine folder (e.g. `_retired/<date>-<what>/`) with a one-line README naming the ruling — the disk-file analogue of the notebook's `SUPERSEDED — DO NOT CITE` rename. Earned 2026-08-06: the retired vault stage's 15 abandoned notes were left beside the live output, a reviewer opened `[2.1.5.1] Acceleration.md` believing it was the writer's `Acceleration.md` ("lacking the bit the student needs to know"), and the pilot was nearly judged a failure on files the pipeline had already disowned
 - Never launch a new wave while the previous wave's "upstream pack corrections owed" list is non-empty
 - `project.json` is the single source of truth for course config and lifecycle state; the wave-state files carry the wave-level rulings
 - The pipeline's stage prompts live in the project's `prompts/` directory (R1/R2/R3/WRITER/CHECKER/FIXER) — agents are launched with "Follow ALL instructions in <prompt file>" + parameters, never with inlined rules
