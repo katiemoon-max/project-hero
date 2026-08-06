@@ -144,11 +144,32 @@ def convert_one(conv, pdf_path):
 
 
 def audit(md_text):
-    """Integrity signals downstream actually depends on."""
+    """Integrity signals downstream actually depends on.
+
+    The Unicode counts are the F20 artifact sweep: these classes survive a
+    passing table gate, and PUA (symbol-font) characters return ZERO to a
+    plain grep -- a mechanical count here is the only reliable detector.
+    The 1PH0 corpus carried 910 PUA glyphs including a Symbol-font tick that
+    was (redundantly, by luck) the marker of a correct MCQ option."""
+    pua = ligatures = math_alnum = replacement = 0
+    for ch in md_text:
+        cp = ord(ch)
+        if 0xE000 <= cp <= 0xF8FF:
+            pua += 1
+        elif 0xFB00 <= cp <= 0xFB06:
+            ligatures += 1
+        elif 0x1D400 <= cp <= 0x1D7FF:
+            math_alnum += 1
+        elif cp == 0xFFFD:
+            replacement += 1
     return {
         "chars": len(md_text),
         "pipes": md_text.count("|"),
         "pages": len(re.findall(r"^## Page \d+$", md_text, re.M)),
+        "pua_chars": pua,
+        "ligature_glyphs": ligatures,
+        "math_alnum_glyphs": math_alnum,
+        "replacement_chars": replacement,
     }
 
 
@@ -197,6 +218,21 @@ def report(records, ms_pattern, root, no_text, scope=None):
             f"-- spot-check if they carry data tables:")
         for r in warnings[:10]:
             log(f"   {r['file']}  ({r['tables']} tables detected, 0 pipes in output)")
+    # F20 Unicode artifact sweep -- report-only, not a gate. PUA glyphs are the
+    # dangerous class: invisible to a plain grep, and occasionally the sole
+    # carrier of meaning (a Symbol-font tick marking a correct MCQ option).
+    unicode_hits = [r for r in records
+                    if r.get("pua_chars") or r.get("ligature_glyphs") or r.get("replacement_chars")]
+    if unicode_hits:
+        log("")
+        log(f"UNICODE AUDIT (F20): {len(unicode_hits)} file(s) carry PUA/ligature/replacement "
+            f"characters -- these survive the table gate and PUA glyphs return zero to a plain grep.")
+        log("Open the highest-count files and check no glyph is the SOLE carrier of meaning")
+        log("(e.g. a tick marking a correct MCQ option); recover such items from the PDF and")
+        log("record them in corpus.known_casualties. Top offenders:")
+        for r in sorted(unicode_hits, key=lambda x: -(x.get("pua_chars", 0) or 0))[:10]:
+            log(f"   {r['file']}  (PUA {r.get('pua_chars', 0)}, ligatures {r.get('ligature_glyphs', 0)}, "
+                f"replacement {r.get('replacement_chars', 0)})")
     if failures:
         log("")
         log("=" * 72)
@@ -231,6 +267,7 @@ def report(records, ms_pattern, root, no_text, scope=None):
                     "files": records,
                     "failures": [r["file"] for r in failures],
                     "no_text": [r["file"] for r in no_text],
+                    "unicode_artifact_files": [r["file"] for r in unicode_hits],
                 },
                 f,
                 indent=2,

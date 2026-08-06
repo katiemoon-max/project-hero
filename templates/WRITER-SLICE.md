@@ -22,7 +22,7 @@ Calibration result: roughly a 3× cost reduction at equal output quality versus 
 | Cobalt commentary per SP | `paths.cobalt_content` (extracted at stage 0; null only by dated ruling) |
 | Legacy vault note file(s) per SP | adopted-vault courses only: `sp-mapping.json` `mapping` (`vault_file` per `cobalt_sp_id`) |
 | Cobalt RN content | `searchRevisionNotes(subtopic_id)` → `findRevisionNote` — save to research folder; flag any `$c{` commentary blocks (they carry examiner-style guidance to fold in) |
-| Board conventions | One extraction per course (marking guidance, levelled mechanism, command words) — reused every slice, never re-derived |
+| Board conventions | One extraction per course (`prompts/BOARD-CONVENTIONS.md`, run at the `/hero-1-research` entry gate → `paths.board_conventions` — F29): command words from the spec's own taxonomy appendix, marking-grid conventions from the Additional-guidance column, traps from ERs. Reused every slice, never re-derived |
 | Exemplars | `project.json` → `exemplars` + the project README's template rules block |
 
 Working files: `research/<unit-key>/<Subtopic>/` — `rn.md`, `vault-digest.md`, `ms-extracts.md`, `nlm-check.md`. Kept as grounding evidence for proofing.

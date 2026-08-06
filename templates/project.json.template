@@ -9,7 +9,6 @@
     "spec_code": "<board spec code, e.g. 1PH0>",
     "name": "<Board Qualification Subject>",
     "cobalt_course_id": "crs_...",
-    "level_slug": "<Cobalt level slug, e.g. international-a-level>",
     "papers": [
       "<paper code = name, e.g. 'H432/01 = Periodic table, elements and physical chemistry', plus which sections/topics it covers — captured at /hero-0-setup §1>"
     ],
@@ -20,7 +19,7 @@
     "vault_notes": "<LEGACY — absolute path to a pre-existing per-SP vault, only where /hero-1-research's adoption path is used; null on fresh builds>",
     "skills_map": "<path to skills-map.json — per-SP skills mapping read DIRECTLY from the specification at /hero-0-setup §7 (never via NotebookLM); null only with an explicit dated ruling>",
     "corpus_root": "<absolute path to the past-paper corpus — source PDFs verified on disk at /hero-0-setup §3, converted .md per sitting from §5>",
-    "board_conventions": "<absolute path to the board marking-conventions file, or null until extracted>",
+    "board_conventions": "<absolute path to the board marking-conventions extraction — built once per course with prompts/BOARD-CONVENTIONS.md at the /hero-1-research entry gate (F29); /hero-2-write refuses to launch writers while this is null>",
     "cobalt_structure": "cobalt-structure.json",
     "syllabus_cross_check": "<path to the downloaded tracker CSV used for the §2 cross-check (CSV preferred; G-sheet URL if that's what was used); null with a dated ruling in structure.cross_check_findings when the course has no Master Syllabus — ratification then runs from the Cobalt tree alone>",
     "cobalt_content": "<path to the extracted Cobalt commentary/ET&T file — extraction kicked off at /hero-0-setup §6; null only with an explicit dated ruling, never a silent deferral>",
@@ -46,6 +45,7 @@
     "file_naming": "<per-sitting file naming, e.g. '<YYYY> <Mon> - Question paper.md / - Mark scheme.md / - Examiner report.md'>",
     "sitting_variants": "<how resit/variant sittings are marked, e.g. '(A)'-suffixed sittings are separate files>",
     "notebook_id": "<NotebookLM notebook id — verified with notebook_get at /hero-0-setup §4; read by hybrid/nlm research modes>",
+    "notebook_disk_gap": "<the /hero-0-setup §4 diff of notebook sources vs disk corpus (F16): sources with no disk counterpart and disk files with no notebook source. R2 reads disk only — a notebook-only sitting is invisible to research>",
     "conversion": {
       "status": "<pending | running | complete — kicked off at /hero-0-setup §5 via scripts/convert_pdfs.py; /hero-1-research gates on complete>",
       "engine": "<converter that produced the corpus, e.g. 'docling (convert_pdfs.py)'. A text-layer extractor is NOT acceptable for mark schemes — see F17>",
@@ -91,6 +91,7 @@
   "wave_size": "~15 subtopics (max 19)",
   "concurrency_cap": 20,
   "status": {
+    "_comment": "Every stage skill writes its own completion back here as its FINAL act (F30) — a status nobody writes to goes stale while staying authoritative-by-declaration. /hero cross-checks this block against the wave-state grid and warns on disagreement. blockers lists every blocker knowingly left open; an empty array on a project with a live blocker reads as a checked negative.",
     "stage": "<0-setup | 1-research | 2-write | 3-check | 4-publish — coarse pointer; wave-state files carry the detail>",
     "units_complete": [],
     "docs_live": 0,

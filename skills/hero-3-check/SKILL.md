@@ -17,6 +17,6 @@ Read `project.json` and the wave-state file. Checker model: strongest available 
 
 ## Wave-state bookkeeping
 
-Blocker/fix/note counts per file; blocker-class tally (manufactured certainty, quote integrity, factual/data, symbols, direction) — this is the metric record that process reviews depend on; note the checker MODEL actually used per file (session-kill substitutions happen and matter later).
+Blocker/fix/note counts per file; blocker-class tally (manufactured certainty, quote integrity, factual/data, symbols, direction) — this is the metric record that process reviews depend on; note the checker MODEL actually used per file (session-kill substitutions happen and matter later). As the wave's check cycle closes, write completion back to `project.json` → `status` (stage + any blocker left open) — every stage writes its own completion, or the declared source of truth goes stale (F30).
 
 Next: `/hero-4-publish` once all wave files are fixed.

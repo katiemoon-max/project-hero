@@ -11,14 +11,15 @@ You are the status orchestrator for a Project Hero course-knowledge build. The l
 
 1. **Locate the project.** Look for `project.json` in the current working directory, then in any known Project Hero project folder. If several exist, ask which one. If none exists, tell the user to run `/hero-0-setup` first.
 2. **Read state.**
-   - `project.json` — course identity, lifecycle status, structure ratification, `corpus.conversion.status`, paths (incl. `skills_map` and `cobalt_content`), model policy, research mode, template variant, plus the legacy `vault` block where a pre-existing vault was adopted
+   - `project.json` — course identity, lifecycle status, structure ratification, `corpus.conversion.status`, paths (incl. `skills_map`, `cobalt_content` and `board_conventions`), model policy, research mode, template variant, plus the legacy `vault` block where a pre-existing vault was adopted
    - If in the wave stages: the current wave-state file `research/<unit-key>/_wave<N>-state.md` with the highest unit/wave numbers — **this file carries the rulings and per-subtopic stage grid; it is the working memory, not this skill**
    - `upload-manifest.json` — live document count
 3. **Print a compact status block:**
    - Course + Cobalt course id
    - Lifecycle stage: structure ratified? · corpus conversion (pending/running/complete, **and whether the table-integrity gate passed** — `corpus.conversion.table_gate_passed`) · stage-0 evidence artifacts present (`skills-map.json`, Cobalt commentary file — or dated null rulings) · research entry gates passed (skeleton ratified?) · waves · legacy vault adopted (only if present)
    - If in waves: units complete / in progress / remaining (subtopic counts), and the current wave's per-subtopic stages (R1 / R2 / R3 / W / C / F / S / uploaded) from the wave-state grid
-   - Open gates: unratified structure or skeleton, incomplete conversion, a conversion whose table-integrity gate has not passed, unapplied pack corrections, pending prompt hardenings, checker reports awaiting fixers, sweeps not yet run, upload HOLDs awaiting the user
+   - Open gates: unratified structure or skeleton, incomplete conversion, a conversion whose table-integrity gate has not passed, a null `paths.board_conventions` (blocks `/hero-2-write` — F29), unapplied pack corrections, pending prompt hardenings, checker reports awaiting fixers, sweeps not yet run, upload HOLDs awaiting the user
+   - **Cross-check `status` against the wave-state grid, and print a ⚠️ when they disagree — trust neither silently (F30).** Both files are already being read, so the comparison is free. Every stage skill now writes its own completion back to `status`, but a stale `status` on the declared source of truth has misled re-orientation before — after a full wave of research it still read `stage: "0-setup"` with an empty `blockers` array over a live blocker
    - Any ⚠️ rulings at the top of the wave-state file
 4. **Name the next command**: one of `/hero-1-research`, `/hero-2-write`, `/hero-3-check`, `/hero-4-publish` — or the specific unblocking action (e.g. "corpus conversion still running — finish it before `/hero-1-research`", or "apply the pack corrections at the top of the wave-state file before launching wave N+1").
 

@@ -42,11 +42,11 @@ A second principle: **token efficiency by construction**. Research agents grep a
 | Path | Contents |
 |---|---|
 | `skills/` | Claude Code skills (`hero`, `hero-0-setup` … `hero-4-publish`) — copy each folder into `.claude/skills/` (project) or `~/.claude/skills/` (user) |
-| `templates/prompts/` | The eight stage prompts (R1-evidence-assembly, R1-vault-digest for adopted legacy vaults, R2, R3-local, R3-nlm, WRITER, CHECKER, FIXER). `/hero-0-setup` copies them into a new project's `prompts/` directory; agents are always launched with "Follow ALL instructions in <prompt file>" + parameters |
+| `templates/prompts/` | The nine stage prompts (R1-evidence-assembly, R1-vault-digest for adopted legacy vaults, R2, R3-local, R3-nlm, WRITER, CHECKER, FIXER, BOARD-CONVENTIONS — the once-per-course marking-conventions extraction run at the `/hero-1-research` entry gate, F29). `/hero-0-setup` copies them into a new project's `prompts/` directory; agents are always launched with "Follow ALL instructions in <prompt file>" + parameters |
 | `templates/project.json.template` | The single per-course config: course facts, ratified structure, corpus + conversion status, exam-section skeleton, model policy, quality gates |
 | `templates/README-template.md` | Project README skeleton incl. the knowledge-file template rules block |
 | `templates/WRITER-SLICE.md` | The pipeline blueprint — model mix rationale, stage design, failure modes |
-| `scripts/` | Build/QA scripts: `convert_pdfs.py` (PDF → markdown corpus conversion, docling, with a table-integrity gate), `build_mapping.py` (adopted-vault reconciliation), `preflight_sweep.py`, `strip_for_cobalt.py`, `protect_starred_refs.py`, `verify_starred_refs.py`, `fixer_diff_sweep.py` |
+| `scripts/` | Build/QA scripts: `convert_pdfs.py` (PDF → markdown corpus conversion, docling, with a table-integrity gate + F20 Unicode artifact audit), `merge_cobalt_shards.py` (schema-checked merge of the stage-0 commentary shards with count reconciliation and a `--check` staleness gate — F22/F23/F28), `build_mapping.py` (adopted-vault reconciliation), `preflight_sweep.py`, `strip_for_cobalt.py`, `protect_starred_refs.py`, `verify_starred_refs.py`, `fixer_diff_sweep.py` |
 
 ## Getting started
 
