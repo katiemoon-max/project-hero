@@ -96,7 +96,7 @@
   },
   "quality_gates": {
     "fixer_diff_sweep": true,
-    "sampled_reaudit_per_wave": "2-3 files, risk-picked, blind to original checker-report",
+    "sampled_reaudit_per_wave": "EVERY file on the course's first wave (F55 — the blind pass is the check while template/exemplars settle); 2-3 files risk-picked on waves 2+; always blind to the original checker-report AND to contested rulings (F57)",
     "preflight_sweep": "master mode pre-strip, --cobalt mode pre-upload",
     "upload_hold": "no upload until the user approves the wave sample"
   },
