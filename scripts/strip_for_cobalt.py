@@ -9,6 +9,13 @@ upload variant:
 - ``> [!tip] Title``  -> heading one level below the enclosing section, title unchanged
 - ``> [!warning] Title`` -> same, with " (Common Error)" appended unless the
   title already mentions errors
+- **UNTITLED callouts get the house default label (F70)**: ``> [!tip]`` ->
+  "Examiner Tips & Tricks", ``> [!warning]`` -> "Common Error". The untitled
+  form is valid Obsidian and was the pack's own documented style for a whole
+  course -- 227 of 227 callouts on 1PH0 reached Cobalt as EMPTY headings
+  (``#### `` / ``####  (Common Error)``), erasing the tip/warning label from
+  every chunk the heading was supposed to name. WRITER.md now asks for titles;
+  this default is the backstop for the shape nothing enforces
 - Callout body lines lose their "> " prefix (blank "> " lines become blank lines)
 - ``> **Specification:** ...`` (and any other plain blockquote) loses its "> " prefix
 
@@ -42,7 +49,13 @@ def strip_for_cobalt(text: str) -> str:
         if callout:
             kind = callout.group("kind").lower()
             title = callout.group("title").strip()
-            if kind == "warning" and "error" not in title.lower():
+            if not title:
+                # F70: never emit an empty heading -- the heading is the
+                # chunk's only label in Cobalt retrieval. Non-house kinds
+                # (which CHECKER should have flagged) fall back to their kind
+                title = {"tip": "Examiner Tips & Tricks",
+                         "warning": "Common Error"}.get(kind, kind.title())
+            elif kind == "warning" and "error" not in title.lower():
                 title += " (Common Error)"
             level = min(current_level + 1, 6)
             out.append(f"{'#' * level} {title}")

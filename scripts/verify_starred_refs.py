@@ -1,7 +1,10 @@
 """Verify the asterisk sweep: no escapes left, and every line carrying a
 starred question ref still renders with intact emphasis.
 
-Usage:  python verify_starred_refs.py <knowledge-files-dir>
+Usage:  python verify_starred_refs.py <knowledge-files-dir> [more dirs...]
+All directory arguments are swept, recursively (F69: this script previously took
+sys.argv[1] only and SILENTLY dropped every further argument -- on 1PH0 that hid
+86 starred-ref lines behind a "clean" report with a non-zero file count).
 Requires: pip install commonmark
 """
 
@@ -13,8 +16,12 @@ from pathlib import Path
 import commonmark
 
 if len(sys.argv) < 2:
-    sys.exit("usage: python verify_starred_refs.py <knowledge-files-dir>")
-ROOT = Path(sys.argv[1])
+    sys.exit("usage: python verify_starred_refs.py <knowledge-files-dir> [more dirs...]")
+ROOTS = [Path(a) for a in sys.argv[1:]]
+bad = [str(r) for r in ROOTS if not r.is_dir()]
+if bad:
+    print(f"GATE COULD NOT RUN: not a directory: {', '.join(bad)}")
+    sys.exit(2)
 
 REF = re.compile(r"Q\*[0-9]")
 ITALIC_LABEL = re.compile(r"^\*Example", re.MULTILINE)
@@ -25,7 +32,8 @@ broken = []
 ref_lines = 0
 scanned = 0
 
-for path in sorted(ROOT.rglob("*.md")):
+for ROOT in ROOTS:
+  for path in sorted(ROOT.rglob("*.md")):
     scanned += 1
     text = io.open(path, encoding="utf-8").read()
 
@@ -49,7 +57,7 @@ for path in sorted(ROOT.rglob("*.md")):
 if scanned == 0:
     # F69: this script once reported clean having swept zero files -- a
     # verification that read nothing must fail loudly, never print "none"
-    print(f"GATE COULD NOT RUN: no .md files found under {ROOT} -- nothing was verified.")
+    print(f"GATE COULD NOT RUN: no .md files found under {', '.join(map(str, ROOTS))} -- nothing was verified.")
     sys.exit(2)
 
 print("files scanned:", scanned)

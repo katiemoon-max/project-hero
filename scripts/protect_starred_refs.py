@@ -13,8 +13,11 @@ because the emphasis algorithm's multiple-of-three rule refuses the pairing).
 Also finishes the label sweep: line-initial *Example ...* italic labels are
 promoted to bold (the bold Example label is what shields most refs).
 
-Usage:  python protect_starred_refs.py <knowledge-files-dir> [--apply]
+Usage:  python protect_starred_refs.py <knowledge-files-dir> [more dirs...] [--apply]
 Dry run by default; pass --apply to write changes.
+All directory arguments are swept, recursively (F69: this script previously took
+args[0] only and SILENTLY dropped every further argument -- a partial sweep whose
+file count is non-zero looks exactly like a full one).
 Requires: pip install commonmark
 """
 
@@ -27,8 +30,12 @@ import commonmark
 
 args = [a for a in sys.argv[1:] if a != "--apply"]
 if not args:
-    sys.exit("usage: python protect_starred_refs.py <knowledge-files-dir> [--apply]")
-ROOT = Path(args[0])
+    sys.exit("usage: python protect_starred_refs.py <knowledge-files-dir> [more dirs...] [--apply]")
+ROOTS = [Path(a) for a in args]
+bad = [str(r) for r in ROOTS if not r.is_dir()]
+if bad:
+    print(f"GATE COULD NOT RUN: not a directory: {', '.join(bad)}")
+    sys.exit(2)
 apply = "--apply" in sys.argv
 
 REF = re.compile(r"(?<!\*)Q\*[0-9]+")
@@ -43,7 +50,8 @@ def ref_survives(line: str) -> bool:
 totals = {"labels": 0, "protected_lines": 0, "protected_refs": 0, "files": 0}
 scanned = 0
 
-for path in sorted(ROOT.rglob("*.md")):
+for ROOT in ROOTS:
+  for path in sorted(ROOT.rglob("*.md")):
     if path.name.endswith(".cobalt.md"):
         continue
     scanned += 1
@@ -77,7 +85,7 @@ for path in sorted(ROOT.rglob("*.md")):
 
 if scanned == 0:
     # F69: zero files scanned must never read as "nothing needed protection"
-    print(f"GATE COULD NOT RUN: no master .md files found under {ROOT} -- nothing was swept.")
+    print(f"GATE COULD NOT RUN: no master .md files found under {', '.join(map(str, ROOTS))} -- nothing was swept.")
     sys.exit(2)
 print()
 print(("APPLIED" if apply else "DRY RUN"), f"files scanned: {scanned},", totals)

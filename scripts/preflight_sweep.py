@@ -71,7 +71,10 @@ def sweep_file(path: Path, cobalt_mode: bool, skills_marker: str):
     if n_escaped:
         fails.append(f"escaped starred refs (backslash-asterisk): {n_escaped}")
 
-    for token, label in ((r"\Delta", r"\Delta (use Unicode increment U+2206)"),
+    for token, label in ((r"\Delta", r"\Delta (use Unicode increment U+2206 -- Katie's Cobalt render "
+                          r"test, 7 Aug 2026: only U+2206 renders; U+0394 and \Delta both break. "
+                          r"A rendering rule, not a semantic one -- do not re-litigate from Unicode "
+                          r"block names, see F67 withdrawn)"),
                          ("$c{", "RN commentary syntax $c{"),
                          ("![", "image embed"),
                          ("http://", "http link"), ("https://", "https link")):
@@ -85,6 +88,16 @@ def sweep_file(path: Path, cobalt_mode: bool, skills_marker: str):
         n_bq = sum(1 for ln in text.splitlines() if ln.startswith(">"))
         if n_bq:
             fails.append(f"blockquote lines: {n_bq}")
+        # F71: check the strip's OUTPUT, not just for its non-occurrence.
+        # F70 shipped 227 empty/parenthetical-only headings through this very
+        # gate -- it checked for surviving "> " markers (strip didn't happen)
+        # and never for what a completed strip had destroyed
+        n_empty = sum(1 for ln in text.splitlines() if re.match(r"^#{1,6}\s*$", ln))
+        if n_empty:
+            fails.append(f"empty headings (a callout lost its title -- F70): {n_empty}")
+        n_paren = sum(1 for ln in text.splitlines() if re.match(r"^#{1,6}\s+\(", ln))
+        if n_paren:
+            fails.append(f"headings that are only a parenthetical (callout title was empty -- F70): {n_paren}")
 
     for i, line in enumerate(text.splitlines(), 1):
         for m in OXFORD_RE.finditer(line):
@@ -116,10 +129,13 @@ def main() -> None:
     for a in argv:
         p = Path(a)
         if p.is_dir():
+            # F69: recursive by rule -- a non-recursive glob on a parent dir
+            # (e.g. knowledge-files/ with unit subdirs) swept nothing and
+            # reported a clean wave
             if cobalt_mode:
-                files += sorted(p.glob("*.cobalt.md"))
+                files += sorted(p.rglob("*.cobalt.md"))
             else:
-                files += sorted(f for f in p.glob("*.md") if not f.name.endswith(".cobalt.md"))
+                files += sorted(f for f in p.rglob("*.md") if not f.name.endswith(".cobalt.md"))
         else:
             files.append(p)
 
