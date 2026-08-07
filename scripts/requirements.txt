@@ -1,2 +1,5 @@
 commonmark>=0.9.1
 docling>=2.107
+# pymupdf4llm (brings pymupdf/fitz): specification conversion + the bold gate
+# (F44/F58) -- docling drops bold, and boards use bold semantically
+pymupdf4llm>=0.0.17

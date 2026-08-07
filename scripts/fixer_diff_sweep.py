@@ -11,15 +11,24 @@ a fixer can introduce:
   2. New quoted spans — every quotation mark a fixer adds is a quote-integrity
      risk (paraphrase-in-quotes was a recurring blocker class)
 
-Report-only: hits are candidates for orchestrator eyeballing, not auto-fails.
-A hit means "read this changed line before stripping", nothing more.
+Report-only on HITS: hits are candidates for orchestrator eyeballing, not
+auto-fails. A hit means "read this changed line before stripping", nothing more.
+
+NOT report-only on RUNNABILITY (F63): a file outside a git repository, or not
+tracked, has no baseline to diff -- the sweep inspects nothing. That case exits
+non-zero and prints GATE COULD NOT RUN, never "clean". On 1PH0 this script
+printed "fixer diff clean" on every fixer-touched file of a whole build because
+/hero-0-setup had never run `git init` -- the gate was decorative from setup,
+and the one residue it existed to catch had to be found by hand. Silence and
+success must not look alike.
 
 Usage:
   python fixer_diff_sweep.py <file.md> [more files...]     # vs HEAD
   python fixer_diff_sweep.py --ref <git-ref> <file.md> ...  # vs given ref
 
 Run AFTER the fixer, BEFORE strip_for_cobalt.py, while the pre-fixer version
-is still what git HEAD (or --ref) holds. Exit code is always 0.
+is still what git HEAD (or --ref) holds. Exit codes: 0 = swept (hits or not),
+2 = GATE COULD NOT RUN on at least one file (step 4 is NOT satisfied).
 """
 
 import argparse
@@ -48,21 +57,31 @@ CERTAINTY_PATTERNS = [
 ]
 
 
+def baseline_exists(path: Path) -> bool:
+    """True only when git can actually supply a pre-fixer baseline for path.
+
+    False means the sweep CANNOT run for this file — not that it is clean.
+    Covers both failure shapes seen in production (F63): no repository at all
+    (hero-0-setup historically never ran `git init`), and a file never
+    committed, so the diff is empty however much the fixer changed."""
+    in_repo = subprocess.run(
+        ["git", "rev-parse", "--is-inside-work-tree"],
+        capture_output=True, text=True, cwd=path.parent, encoding="utf-8",
+    ).returncode == 0
+    if not in_repo:
+        return False
+    return subprocess.run(
+        ["git", "ls-files", "--error-unmatch", path.name],
+        capture_output=True, text=True, cwd=path.parent, encoding="utf-8",
+    ).returncode == 0
+
+
 def added_lines(path: Path, ref: str):
     path = path.resolve()
     out = subprocess.run(
         ["git", "diff", "-U0", ref, "--", path.name],
         capture_output=True, text=True, cwd=path.parent, encoding="utf-8",
     ).stdout
-    if not out.strip():
-        # Distinguish "no changes" from "file unknown to git" — a silent empty
-        # diff on an untracked/mistyped path would report a false "clean"
-        tracked = subprocess.run(
-            ["git", "ls-files", "--error-unmatch", path.name],
-            capture_output=True, text=True, cwd=path.parent, encoding="utf-8",
-        ).returncode == 0
-        if not tracked:
-            print(f"  WARNING: {path.name} is not tracked by git — diff is meaningless")
     lineno = None
     for raw in out.splitlines():
         m = re.match(r"^@@ -\d+(?:,\d+)? \+(\d+)", raw)
@@ -87,8 +106,15 @@ def main() -> None:
     ref = ns.ref
 
     total_hits = 0
+    unrunnable = []
     for a in ns.files:
         path = Path(a)
+        if not baseline_exists(path.resolve()):
+            # F63: never print "clean" for a file we could not inspect
+            print(f"== {path.name} — GATE COULD NOT RUN: no git baseline "
+                  f"(not in a repository, or never committed) — nothing was swept")
+            unrunnable.append(path)
+            continue
         hits = []
         for lineno, line in added_lines(path, ref):
             for pat, label in CERTAINTY_PATTERNS:
@@ -103,6 +129,12 @@ def main() -> None:
         else:
             print(f"== {path.name} — fixer diff clean")
 
+    if unrunnable:
+        print(f"\nGATE COULD NOT RUN on {len(unrunnable)} file(s) — step 4 is NOT satisfied.")
+        print("Fix: `git init` the project directory and commit the pre-fixer masters")
+        print("(hero-0-setup does this on new projects), then re-run. A gate that")
+        print("cannot see its input must fail loudly, never pass quietly.")
+        raise SystemExit(2)
     print(f"\nDone. {total_hits} hit(s). Each is a read-before-strip candidate, not an auto-fail.")
 
 

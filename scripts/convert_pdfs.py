@@ -18,6 +18,36 @@ The TABLE-INTEGRITY GATE below is the guard: a mark scheme that converts to zero
 pipe characters has no table left, and this script FAILS LOUDLY (exit 1) rather
 than passing quietly.
 
+THREE FURTHER GATES/CHECKS (F32, F44/F58, F62 -- 1PH0, August 2026), because the
+table gate is aimed at ONE failure mode and was blind to the rest:
+
+* LEGIBILITY GATE (F32): a non-standard font encoding can make an engine emit
+  glyph indices ("## /0 /1 /2 /3 ...") instead of characters. The output passes
+  the table gate, looks complete, and is unreadable -- two 1PH0 examiner reports
+  were 80% and 76% glyph-index lines and downstream briefs counted them as
+  usable. Any file that is mostly glyph-index lines, or that contains zero lines
+  of subject-neutral corpus vocabulary (candidates/marks/question/answer), FAILS.
+  Record failures in project.json -> corpus.known_casualties WITH the reason --
+  a silently unusable file is worse than a missing one, because thin results
+  from it look like genuine thinness.
+
+* SPEC ENGINE + BOLD GATE (F44/F58/F64): docling drops BOLD -- and Edexcel marks
+  Higher-tier-only spec content in bold, so a docling-converted specification is
+  tier-blind AND (F58) can silently lose statement content ("g energy" vanished
+  from 2.4; three whole sub-items across one spec). pymupdf4llm preserves both,
+  so files matching --spec-pattern are converted with pymupdf4llm instead. The
+  BOLD GATE then fails any spec whose source PDF carries bold spans while the
+  converted markdown carries no `**`. Per F64, engine choice is PER DOCUMENT
+  TYPE, not per corpus: the docling-vs-pymupdf4llm result INVERTS between mark
+  schemes and question papers (docling loses QP figure text; pymupdf4llm loses
+  MS guidance words), so never swap the engine wholesale in either direction.
+
+* ORPHAN-PART CHECK (F62, report-only): question part labels in an exam paper
+  are strictly sequential -- a "(ii)" whose predecessor is not "(i)" means the
+  conversion dropped content (1PH0: a whole stem + figure + part (i) vanished,
+  leaving an orphaned satellite question that five stages then reasoned about).
+  Discontinuities are reported per question-paper file for human follow-up.
+
 Resumable: skips files already converted by THIS script (marker on line 1) and
 overwrites .md produced by anything else -- including older text-layer runs -- so
 a corpus upgrades in place on re-run. Flags docs with no extractable text (scans),
@@ -53,6 +83,8 @@ import time
 import traceback
 
 MARKER = "<!-- docling-extract v1 -->"
+SPEC_MARKER = "<!-- pymupdf4llm-extract v1 -->"
+KNOWN_MARKERS = (MARKER, SPEC_MARKER)
 PAGE_BREAK = "<!--__HERO_PAGE_BREAK__-->"
 
 # Filenames matching this are mark schemes, and are held to the table-integrity
@@ -61,7 +93,26 @@ PAGE_BREAK = "<!--__HERO_PAGE_BREAK__-->"
 # check the hit list the run prints before trusting the gate on a new board.
 DEFAULT_MS_PATTERN = r"mark[\s_-]*scheme|\b(r?ms|msc)\b|[\s_-](r?ms|msc)[\s_.-]"
 
+# Filenames matching this are specifications: converted with pymupdf4llm (bold
+# survives -- boards use bold semantically, e.g. Edexcel GCSE Higher-tier
+# marking) and held to the bold gate (F44/F58).
+DEFAULT_SPEC_PATTERN = r"specification|syllabus"
+
+# Filenames matching this are question papers: held to the orphan-part check
+# (F62, report-only).
+DEFAULT_QP_PATTERN = r"question[\s_-]*paper|\bqp\b|[\s_-]qp[\s_.-]"
+
 NO_TEXT_CHARS = 200  # below this a doc is treated as a scan
+
+# F32 legibility gate. Glyph-index lines look like "## /0 /1 /2 /3/4 /5 ..." --
+# an engine emitting font glyph ids instead of characters. Real 1PH0 failures
+# were 80% and 76% such lines against a clean-file baseline of 0%, so the
+# threshold needs no tuning.
+GLYPH_INDEX_LINE = re.compile(r"^[#|\s]*(/[0-9A-Fa-f]+\s*)+\|?\s*$")
+GLYPH_SHARE_FAIL = 0.30
+# Subject-neutral corpus vocabulary: any legible exam document (QP/MS/ER/spec)
+# contains at least one of these somewhere.
+VOCAB_RE = re.compile(r"candidates?|marks?|questions?|answers?", re.I)
 
 
 def log(msg):
@@ -89,14 +140,83 @@ def build_converter():
     )
 
 
-def already_done(md_path):
+def already_done(md_path, expected_marker):
+    """Resumable only against the engine this file type is SUPPOSED to use --
+    a spec previously converted by docling must be reconverted (F44/F58), so
+    it does not count as done."""
     if not os.path.exists(md_path) or os.path.getsize(md_path) == 0:
         return False
     try:
         with open(md_path, "r", encoding="utf-8") as f:
-            return f.readline().strip() == MARKER
+            return f.readline().strip() == expected_marker
     except Exception:
         return False
+
+
+def convert_one_spec(pdf_path):
+    """Specification conversion via pymupdf4llm (F44/F58): preserves bold --
+    which boards use semantically -- and kept full statement bodies that
+    docling dropped from spec tables in production."""
+    import pymupdf4llm
+
+    stem = os.path.splitext(os.path.basename(pdf_path))[0]
+    chunks = pymupdf4llm.to_markdown(pdf_path, page_chunks=True)
+    parts = [SPEC_MARKER, "", f"# {stem}", ""]
+    empty = 0
+    for i, chunk in enumerate(chunks, 1):
+        text = (chunk.get("text") or "").strip()
+        if len(text) < 20:
+            empty += 1
+            parts.append(f"## Page {i}\n\n[no extractable text -- likely image/scan]\n")
+        else:
+            parts.append(f"## Page {i}\n\n{text}\n")
+    md = "\n".join(parts).rstrip() + "\n"
+    return md, len(chunks), empty, None
+
+
+def pdf_has_bold(pdf_path):
+    """True if the source PDF carries any bold text span (fitz/PyMuPDF).
+    Returns None when the check itself cannot run -- callers must treat None
+    as 'gate could not run', never as False."""
+    try:
+        import fitz
+    except ImportError:
+        return None
+    try:
+        doc = fitz.open(pdf_path)
+        for page in doc:
+            for block in page.get_text("dict").get("blocks", []):
+                for line in block.get("lines", []):
+                    for span in line.get("spans", []):
+                        if span.get("flags", 0) & 16 or "bold" in span.get("font", "").lower():
+                            return True
+        return False
+    except Exception:
+        return None
+
+
+PART_LABEL = re.compile(r"^\s*[*\-]?\s*\*?\((i{1,3}|iv|[a-h])\)", re.M)
+ROMAN_ORDER = {"i": 1, "ii": 2, "iii": 3, "iv": 4}
+
+
+def part_discontinuities(md_text):
+    """F62 orphan-part check (report-only): part labels are strictly sequential
+    in an exam paper. Valid transitions are X -> successor(X) and X -> (i)/(a)
+    (a new question's first part). Anything else means the conversion dropped
+    the intervening content. Roman and alphabetic sequences tracked separately."""
+    issues = 0
+    prev = {"roman": None, "alpha": None}
+    for m in PART_LABEL.finditer(md_text):
+        label = m.group(1)
+        if label in ROMAN_ORDER:
+            kind, val = "roman", ROMAN_ORDER[label]
+        else:
+            kind, val = "alpha", ord(label) - ord("a") + 1
+        last = prev[kind]
+        if val != 1 and (last is None or val != last + 1):
+            issues += 1
+        prev[kind] = val
+    return issues
 
 
 def paginate(body, stem):
@@ -162,6 +282,10 @@ def audit(md_text):
             math_alnum += 1
         elif cp == 0xFFFD:
             replacement += 1
+    # F32 legibility signals
+    nonblank = [ln for ln in md_text.splitlines() if ln.strip()]
+    glyph_lines = sum(1 for ln in nonblank if GLYPH_INDEX_LINE.match(ln))
+    vocab_lines = sum(1 for ln in nonblank if VOCAB_RE.search(ln))
     return {
         "chars": len(md_text),
         "pipes": md_text.count("|"),
@@ -170,6 +294,11 @@ def audit(md_text):
         "ligature_glyphs": ligatures,
         "math_alnum_glyphs": math_alnum,
         "replacement_chars": replacement,
+        "nonblank_lines": len(nonblank),
+        "glyph_index_lines": glyph_lines,
+        "glyph_index_share": round(glyph_lines / len(nonblank), 3) if nonblank else 0.0,
+        "vocab_lines": vocab_lines,
+        "bold_marks": md_text.count("**") // 2,
     }
 
 
@@ -177,17 +306,42 @@ def is_mark_scheme(path, pattern):
     return bool(re.search(pattern, os.path.basename(path), re.I))
 
 
+def is_spec(path, pattern):
+    return bool(re.search(pattern, os.path.basename(path), re.I))
+
+
+def is_question_paper(path, pattern):
+    return bool(re.search(pattern, os.path.basename(path), re.I))
+
+
 def gate(records, ms_pattern):
-    """Table-integrity gate. Returns (ok, failures, warnings)."""
+    """Table-integrity + legibility + bold gates.
+    Returns (ok, table_failures, warnings, legibility_failures, bold_failures)."""
     failures = [r for r in records if r["is_mark_scheme"] and r["pipes"] == 0 and r["chars"] > NO_TEXT_CHARS]
     warnings = [r for r in records if not r["is_mark_scheme"] and r["pipes"] == 0 and r["tables"] not in (0, None)]
-    return (not failures), failures, warnings
+    # F32: mostly glyph-index lines, or zero corpus vocabulary in a real file
+    legibility = [
+        r for r in records
+        if r["chars"] > NO_TEXT_CHARS
+        and (r.get("glyph_index_share", 0) >= GLYPH_SHARE_FAIL or r.get("vocab_lines", 1) == 0)
+    ]
+    # F44: spec whose PDF has bold spans while the markdown has none -- and
+    # the case where the bold check itself could not run is ALSO a failure
+    # (bold_in_pdf None), never a silent pass
+    bold = [
+        r for r in records
+        if r.get("is_spec")
+        and r.get("bold_in_pdf") is not False
+        and (r.get("bold_in_pdf") is None or r.get("bold_marks", 0) == 0)
+    ]
+    ok = not failures and not legibility and not bold
+    return ok, failures, warnings, legibility, bold
 
 
 def report(records, ms_pattern, root, no_text, scope=None):
     """scope=None means the whole corpus; anything else is a partial run whose
     verdict must not be filed as the corpus-wide one."""
-    ok, failures, warnings = gate(records, ms_pattern)
+    ok, failures, warnings, legibility, bold = gate(records, ms_pattern)
     ms = [r for r in records if r["is_mark_scheme"]]
     log("")
     if scope:
@@ -233,6 +387,40 @@ def report(records, ms_pattern, root, no_text, scope=None):
         for r in sorted(unicode_hits, key=lambda x: -(x.get("pua_chars", 0) or 0))[:10]:
             log(f"   {r['file']}  (PUA {r.get('pua_chars', 0)}, ligatures {r.get('ligature_glyphs', 0)}, "
                 f"replacement {r.get('replacement_chars', 0)})")
+    if legibility:
+        log("")
+        log("=" * 72)
+        log("LEGIBILITY GATE FAILED (F32) -- these files converted but are UNREADABLE")
+        log("=" * 72)
+        log("Mostly glyph-index lines (non-standard font encoding) or zero corpus")
+        log("vocabulary. A silently unusable file is worse than a missing one: thin")
+        log("results from it look like genuine thinness. Record EACH in project.json ->")
+        log("corpus.known_casualties with the reason, or re-convert from a better source:")
+        for r in legibility:
+            log(f"   {r['file']}  (glyph-index share {r.get('glyph_index_share', 0):.0%}, "
+                f"vocab lines {r.get('vocab_lines', 0)})")
+    if bold:
+        log("")
+        log("=" * 72)
+        log("BOLD GATE FAILED (F44) -- specification lost its bold, or check could not run")
+        log("=" * 72)
+        log("Boards use bold semantically (Edexcel GCSE: bold = Higher tier only). A spec")
+        log("with no ** in its markdown while the PDF carries bold spans is tier-blind,")
+        log("and every downstream tier claim inherits that silently:")
+        for r in bold:
+            why = ("bold check could not run (pip install pymupdf)"
+                   if r.get("bold_in_pdf") is None
+                   else f"PDF has bold, markdown has {r.get('bold_marks', 0)} ** pairs")
+            log(f"   {r['file']}  ({why})")
+    orphaned = [r for r in records if r.get("part_discontinuities")]
+    if orphaned:
+        log("")
+        log(f"ORPHAN-PART CHECK (F62, report-only): {len(orphaned)} question paper(s) have "
+            f"non-sequential part labels -- a (ii) with no (i) before it means the")
+        log("conversion dropped the intervening content (a stem, a figure, a whole part).")
+        log("Read each in place against the PDF before any stage asserts an absence:")
+        for r in sorted(orphaned, key=lambda x: -x["part_discontinuities"])[:10]:
+            log(f"   {r['file']}  ({r['part_discontinuities']} discontinuity(ies))")
     if failures:
         log("")
         log("=" * 72)
@@ -248,7 +436,7 @@ def report(records, ms_pattern, root, no_text, scope=None):
         log("in project.json -> corpus.known_casualties and re-run --verify.")
     elif ok:
         log("")
-        log("CONVERSION GATE PASSED -- every mark scheme retained table structure.")
+        log("CONVERSION GATE PASSED -- table structure, legibility and spec bold all held.")
 
     name = "conversion-report.json"
     if scope:
@@ -266,6 +454,18 @@ def report(records, ms_pattern, root, no_text, scope=None):
                     "gate_covers_whole_corpus": scope is None,
                     "files": records,
                     "failures": [r["file"] for r in failures],
+                    "legibility_failures": [
+                        {"file": r["file"],
+                         "glyph_index_share": r.get("glyph_index_share", 0),
+                         "vocab_lines": r.get("vocab_lines", 0),
+                         "reason": "glyph-index/unreadable (F32) -- record in corpus.known_casualties"}
+                        for r in legibility
+                    ],
+                    "bold_gate_failures": [r["file"] for r in bold],
+                    "part_discontinuity_files": [
+                        {"file": r["file"], "count": r["part_discontinuities"]}
+                        for r in orphaned
+                    ],
                     "no_text": [r["file"] for r in no_text],
                     "unicode_artifact_files": [r["file"] for r in unicode_hits],
                 },
@@ -303,6 +503,10 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="convert only the first N (smoke test)")
     ap.add_argument("--verify", action="store_true", help="audit existing .md only; convert nothing")
     ap.add_argument("--ms-pattern", default=DEFAULT_MS_PATTERN, help="regex identifying mark-scheme filenames")
+    ap.add_argument("--spec-pattern", default=DEFAULT_SPEC_PATTERN,
+                    help="regex identifying specification filenames (converted with pymupdf4llm, bold-gated)")
+    ap.add_argument("--qp-pattern", default=DEFAULT_QP_PATTERN,
+                    help="regex identifying question-paper filenames (orphan-part check)")
     args = ap.parse_args()
 
     root = args.root
@@ -331,13 +535,20 @@ def main():
                 log(f"UNREADABLE {p}: {e}")
                 continue
             a = audit(text)
+            spec = is_spec(p, args.spec_pattern)
             rec = {
                 "file": os.path.relpath(p, root),
                 "engine": text.split("\n", 1)[0].strip() if text.startswith("<!--") else "unknown",
                 "is_mark_scheme": is_mark_scheme(p, args.ms_pattern),
+                "is_spec": spec,
                 "tables": None,
                 **a,
             }
+            if spec:
+                sibling_pdf = os.path.splitext(p)[0] + ".pdf"
+                rec["bold_in_pdf"] = pdf_has_bold(sibling_pdf) if os.path.exists(sibling_pdf) else None
+            if is_question_paper(p, args.qp_pattern):
+                rec["part_discontinuities"] = part_discontinuities(text)
             records.append(rec)
             if a["chars"] < NO_TEXT_CHARS:
                 no_text.append(rec)
@@ -361,32 +572,48 @@ def main():
     for i, pdf in enumerate(pdfs, 1):
         rel = os.path.relpath(pdf, root)
         md_path = os.path.splitext(pdf)[0] + ".md"
-        if already_done(md_path):
+        spec = is_spec(pdf, args.spec_pattern)
+        expected_marker = SPEC_MARKER if spec else MARKER
+        if already_done(md_path, expected_marker):
             skip += 1
             # still audit it, so the gate covers the whole corpus on a resumed run
             text = open(md_path, encoding="utf-8", errors="replace").read()
-            records.append({
+            rec = {
                 "file": os.path.relpath(md_path, root),
-                "engine": MARKER,
+                "engine": expected_marker,
                 "is_mark_scheme": is_mark_scheme(md_path, args.ms_pattern),
+                "is_spec": spec,
                 "tables": None,
                 **audit(text),
-            })
+            }
+            if spec:
+                rec["bold_in_pdf"] = pdf_has_bold(pdf)
+            if is_question_paper(md_path, args.qp_pattern):
+                rec["part_discontinuities"] = part_discontinuities(text)
+            records.append(rec)
             continue
         try:
             t = time.time()
-            md, pages, empty, tables = convert_one(conv, pdf)
+            if spec:
+                md, pages, empty, tables = convert_one_spec(pdf)
+            else:
+                md, pages, empty, tables = convert_one(conv, pdf)
             with open(md_path, "w", encoding="utf-8", newline="\n") as f:
                 f.write(md)
             conv_n += 1
             a = audit(md)
             rec = {
                 "file": os.path.relpath(md_path, root),
-                "engine": MARKER,
+                "engine": expected_marker,
                 "is_mark_scheme": is_mark_scheme(md_path, args.ms_pattern),
+                "is_spec": spec,
                 "tables": tables,
                 **a,
             }
+            if spec:
+                rec["bold_in_pdf"] = pdf_has_bold(pdf)
+            if is_question_paper(md_path, args.qp_pattern):
+                rec["part_discontinuities"] = part_discontinuities(md)
             records.append(rec)
             flags = ""
             if a["chars"] < NO_TEXT_CHARS:
@@ -394,6 +621,8 @@ def main():
                 flags += "  <-- NO TEXT (scan?)"
             if rec["is_mark_scheme"] and a["pipes"] == 0 and a["chars"] > NO_TEXT_CHARS:
                 flags += "  <-- NO TABLES (gate will fail)"
+            if a.get("glyph_index_share", 0) >= GLYPH_SHARE_FAIL or a.get("vocab_lines", 1) == 0:
+                flags += "  <-- UNREADABLE (legibility gate will fail)"
             log(f"[{i}/{len(pdfs)}] {rel}  ({a['chars']} chars, {pages}p, {empty} empty, "
                 f"{a['pipes']} pipes, {tables} tables, {time.time() - t:.1f}s){flags}")
         except Exception as e:

@@ -41,10 +41,12 @@ def ref_survives(line: str) -> bool:
 
 
 totals = {"labels": 0, "protected_lines": 0, "protected_refs": 0, "files": 0}
+scanned = 0
 
 for path in sorted(ROOT.rglob("*.md")):
     if path.name.endswith(".cobalt.md"):
         continue
+    scanned += 1
     text = io.open(path, encoding="utf-8").read()
     original = text
 
@@ -73,5 +75,9 @@ for path in sorted(ROOT.rglob("*.md")):
         if apply:
             io.open(path, "w", encoding="utf-8", newline="\n").write(text)
 
+if scanned == 0:
+    # F69: zero files scanned must never read as "nothing needed protection"
+    print(f"GATE COULD NOT RUN: no master .md files found under {ROOT} -- nothing was swept.")
+    sys.exit(2)
 print()
-print(("APPLIED" if apply else "DRY RUN"), totals)
+print(("APPLIED" if apply else "DRY RUN"), f"files scanned: {scanned},", totals)

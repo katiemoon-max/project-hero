@@ -123,6 +123,13 @@ def main() -> None:
         else:
             files.append(p)
 
+    if not files:
+        # F69: a gate that swept zero files must not report clean -- "0 files
+        # swept" with exit 0 is indistinguishable from a passing sweep
+        print("GATE COULD NOT RUN: no files matched the given paths"
+              f" ({'*.cobalt.md' if cobalt_mode else '*.md'} mode) -- nothing was swept.")
+        sys.exit(2)
+
     any_fail = False
     tot_sp = tot_kt = tot_sk = 0
     for f in files:

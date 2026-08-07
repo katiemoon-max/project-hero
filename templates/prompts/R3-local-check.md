@@ -29,6 +29,8 @@ For EVERY sitting in the unit's corpus that has an Examiner report file:
 
 - Every number/count claim: per-file `grep -c` only, never `files_with_matches` totals
 - Known corpus casualties: check `project.json` → `corpus.known_casualties` and the unit's wave-state file for the current list — never cite an item on it (file path or notebook source title)
+- **Content limitations (F65):** check `project.json` → `corpus.content_limitations` — content *classes* unreliable in every file. Each entry's `mandatory_action` binds you; above all, never assert an absence inside a limited class from the converted markdown alone
+- **Anomalies go to the PDF first (F62):** before recording an absence claim, a cross-source contradiction, or an ER/MS row you cannot match to a stem, re-open the source PDF and read it in place — the converted file is working evidence, not the paper. What you cannot resolve goes in your return as `unresolved_anomalies`, never silently smoothed over
 - ESCALATION_NOTE: if the orchestrator has authorised NLM escalation and your sweep for a subtopic comes back genuinely thin (fewer than ~3 usable ER passages across the corpus), say so explicitly in the Summary and recommend an NLM escalation query — do NOT run one yourself unless the parameters include a NOTEBOOK_ID and say to
 
-Return: counts per output section + the 2–3 most valuable verified insights + any data-quality flags.
+Return: counts per output section + the 2–3 most valuable verified insights + any data-quality flags + `unresolved_anomalies` (state "none" explicitly).
