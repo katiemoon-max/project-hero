@@ -27,7 +27,8 @@ so a naive dedup deletes correct content (F22).
 Acceptance test (hard): parsed entries - duplicates dropped == entries emitted.
 
 Usage:
-  python merge_cobalt_shards.py <project_dir>                 # merge
+  python merge_cobalt_shards.py <project_dir>                 # merge (finds shards
+                                  recursively, e.g. in research/cobalt-commentary/)
   python merge_cobalt_shards.py <project_dir> --check         # staleness gate only
   python merge_cobalt_shards.py <project_dir> --shard-glob "*-Cobalt-Content-S*.md"
   python merge_cobalt_shards.py <project_dir> --mapping sp-mapping.json --output 1PH0-Cobalt-Content.md
@@ -162,13 +163,27 @@ def main():
     args = ap.parse_args()
 
     pdir = args.project_dir
+    # The skill passes <project_dir>, but shards' natural home is
+    # research/cobalt-commentary/ -- search recursively before concluding
+    # nothing exists (2026-08-10 feedback: a flat glob here exited 2 on a
+    # correctly laid-out project).
     shards = sorted(globmod.glob(os.path.join(pdir, args.shard_glob)))
     if not shards:
-        log(f"No shards match {args.shard_glob!r} under {pdir} -- nothing to merge.")
+        shards = sorted(globmod.glob(os.path.join(pdir, "**", args.shard_glob), recursive=True))
+    if not shards:
+        log(f"No shards match {args.shard_glob!r} under {pdir} (searched recursively) -- nothing to merge.")
         log("(A single-agent extraction still writes a -S01 shard; the merged file is always produced by this script.)")
         sys.exit(2)
+    shard_dirs = sorted({os.path.dirname(s) for s in shards})
+    if len(shard_dirs) > 1:
+        log(f"Shards found in {len(shard_dirs)} different directories -- move them together or narrow --shard-glob:")
+        for d in shard_dirs:
+            log("   " + d)
+        sys.exit(2)
 
-    # Derive the output name from the shard prefix unless given.
+    # Derive the output name from the shard prefix unless given. A derived
+    # output sits BESIDE the shards (not at project_dir) so a recursive find
+    # keeps the merged file next to its sources.
     out = args.output
     if out and not os.path.isabs(out):
         out = os.path.join(pdir, out)
@@ -177,7 +192,7 @@ def main():
         if len(prefixes) != 1:
             log(f"Shards carry {len(prefixes)} different prefixes ({sorted(prefixes)}) -- pass --output explicitly.")
             sys.exit(2)
-        out = os.path.join(pdir, prefixes.pop() + ".md")
+        out = os.path.join(shard_dirs[0], prefixes.pop() + ".md")
 
     if args.check:
         if not os.path.exists(out):

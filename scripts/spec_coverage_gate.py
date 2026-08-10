@@ -3,16 +3,23 @@
 PACK PROVENANCE: written and production-tested by Leander Oates on 1PH0
 (found: a Core Practical absent from the tracker entirely, a typo'd id making
 one statement unreachable, and a wrong whole-statement tier flag). Imported
-into the pack verbatim, 7 Aug 2026. THREE THINGS TO CHECK PER COURSE before
-trusting it (assert your denominator — F59):
-  1. The statement-ID grammar (ID regex below) is Edexcel GCSE's
-     (`2.23`, `11.10P`). Other boards number differently — extend it and check
-     the parsed statement count against the tracker's total.
-  2. tracker_allocation() reads the 1PH0 Master Syllabus layout (definition
-     col 4, subtopic col 2, Higher-Tier col 5, data from row 3). Verify the
-     columns against the course's own tracker tab.
-  3. paths.specification_pdf should be set in project.json (F60); the
-     reference-dir glob is only a fallback.
+into the pack 7 Aug 2026; course-parameterised 10 Aug 2026 after a second
+course needed a text-keyed rewrite of the hard-coded tracker shape.
+
+PER-COURSE CONFIGURATION (project.json -> spec_coverage; defaults reproduce
+1PH0 -- assert your denominator, F59):
+  "spec_coverage": {
+    "statement_id_regex": "\\d{1,2}\\.\\d{1,2}[PH]?",   # Edexcel GCSE grammar
+    "tracker": {
+      "first_data_row": 2,                # 0-based; rows above hold headers
+      "definition_col": "Definition",     # header text (unique substring,
+      "subtopic_col": "Subtopic",         #   matched case-insensitively in the
+      "higher_tier_col": "Higher Tier"    #   header rows) OR a 0-based index.
+    }                                     # higher_tier_col: null = untiered course
+  }
+After changing the id regex, check the parsed statement count against the
+tracker's total. paths.specification_pdf should be set in project.json (F60);
+the reference-dir glob is only a fallback.
 Checks A/B run at /hero-0-setup §6 (setup-time); checks C/D gate
 /hero-4-publish (blocking).
 
@@ -32,7 +39,29 @@ import csv, json, re, sys, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CFG = json.loads((ROOT / "project.json").read_text(encoding="utf-8"))
-ID = re.compile(r"\d{1,2}\.\d{1,2}[PH]?")
+SPEC_CFG = CFG.get("spec_coverage") or {}
+TRK_CFG = SPEC_CFG.get("tracker") or {}
+ID = re.compile(SPEC_CFG.get("statement_id_regex") or r"\d{1,2}\.\d{1,2}[PH]?")
+
+
+def resolve_col(spec, header_rows, default_idx, what):
+    """A column is named by header text (unique case-insensitive substring
+    across the header rows) or given as a 0-based index. Ambiguity and misses
+    FAIL LOUDLY -- a wrong column read silently was exactly the 1PH0 hazard."""
+    if spec is None:
+        return default_idx
+    if isinstance(spec, int):
+        return spec
+    hits = set()
+    for row in header_rows:
+        for i, cell in enumerate(row):
+            if spec.lower() in cell.strip().lower():
+                hits.add(i)
+    if len(hits) != 1:
+        sys.exit(f"tracker column {what!r}: header text {spec!r} matched "
+                 f"{len(hits)} column(s) in the header rows -- fix "
+                 f"project.json -> spec_coverage.tracker ({sorted(hits) or 'no match'})")
+    return hits.pop()
 
 
 def norm(s):
@@ -82,8 +111,12 @@ def bold_extent(raw):
 
 
 def tracker_allocation(path):
-    """id -> [(subtopic, higher_tier)], from col 4 (Definition). Col 9 is a
-    second, abridged listing with a known duplicate at 12.4 — never read it.
+    """id -> [(subtopic, higher_tier)], from the tracker's definition column.
+    Columns and first data row come from project.json -> spec_coverage.tracker
+    (defaults: the 1PH0 Master Syllabus layout -- definition col 4, subtopic
+    col 2, Higher-Tier col 5, data from row 3). Beware abridged duplicate
+    listings in other columns (1PH0 col 9 duplicated 12.4) -- point
+    definition_col at the authoritative one only.
 
     A statement can appear against SEVERAL subtopics. That is not duplication:
     it is how the tracker splits a statement whose halves sit in different
@@ -91,13 +124,20 @@ def tracker_allocation(path):
     4.10 direction/speed). The list is the statement's full allocation."""
     alloc = {}
     rows = list(csv.reader(open(path, encoding="utf-8-sig")))
+    first_data = TRK_CFG.get("first_data_row", 2)
+    headers = rows[:first_data]
+    def_col = resolve_col(TRK_CFG.get("definition_col"), headers, 4, "definition_col")
+    sub_col = resolve_col(TRK_CFG.get("subtopic_col"), headers, 2, "subtopic_col")
+    ht_spec = TRK_CFG.get("higher_tier_col", 5)  # explicit null = untiered course
+    ht_col = None if ht_spec is None else resolve_col(ht_spec, headers, 5, "higher_tier_col")
+    needed = max(def_col, sub_col, ht_col if ht_col is not None else 0) + 1
     pat = re.compile(r"(?m)(?:^|(?<=\n))\s*(" + ID.pattern + r")\s+")
-    for r in rows[2:]:
-        if len(r) < 7 or not r[4].strip():
+    for r in rows[first_data:]:
+        if len(r) < needed or not r[def_col].strip():
             continue
-        for m in pat.finditer(r[4].replace("\r", "")):
+        for m in pat.finditer(r[def_col].replace("\r", "")):
             homes = alloc.setdefault(m.group(1), [])
-            entry = (r[2].strip(), bool(r[5].strip()))
+            entry = (r[sub_col].strip(), bool(r[ht_col].strip()) if ht_col is not None else False)
             if entry not in homes:
                 homes.append(entry)
     return alloc

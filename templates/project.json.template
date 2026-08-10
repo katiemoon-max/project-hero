@@ -66,8 +66,25 @@
         "consequence": "<e.g. 'absent from converted markdown with no gap left behind'>",
         "applies_to": "<e.g. 'all question papers'>",
         "mandatory_action": "<e.g. 'check research/corpus/pdf-second-engine/ before any absence claim'>"
+      },
+      {
+        "_comment": "F62 widened to mark schemes (2026-08-10): reading-order/row scrambles were scoped to QPs in the original class, and MS-side instances recurred all wave. Ships in the template so no course rediscovers it.",
+        "class": "mark-scheme partial row loss",
+        "consequence": "single marking-point rows or cells dropped/merged while the table still parses — the pipe-count gate passes (10+ verified instances in one 4PH1 wave)",
+        "applies_to": "all mark schemes",
+        "mandatory_action": "run scripts/ms_row_coverage.py after conversion; where a question's MS mark tally falls short of the QP's 'Total for Question N', verify against the source PDF before quoting the scheme as complete or asserting a marking point is absent"
       }
     ]
+  },
+  "spec_coverage": {
+    "_comment": "Read by scripts/spec_coverage_gate.py (2026-08-10: parameterised after a second course needed a text-keyed rewrite of the hard-coded 1PH0 tracker shape). Defaults reproduce 1PH0 — VERIFY per course and check the parsed statement count against the tracker's total (F59).",
+    "statement_id_regex": "<regex for the board's spec statement ids, e.g. '\\\\d{1,2}\\\\.\\\\d{1,2}[PH]?' for Edexcel GCSE '2.23'/'11.10P'>",
+    "tracker": {
+      "first_data_row": 2,
+      "definition_col": "<header text (unique case-insensitive substring in the header rows) or 0-based index of the authoritative definition column>",
+      "subtopic_col": "<header text or 0-based index of the subtopic column>",
+      "higher_tier_col": "<header text or 0-based index of the tier-flag column; null on untiered courses>"
+    }
   },
   "vault": {
     "_comment": "LEGACY block — present only where a pre-existing per-SP vault was adopted at /hero-1-research. Fresh builds omit this block entirely: there is no vault stage.",

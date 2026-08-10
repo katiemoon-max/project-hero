@@ -48,6 +48,24 @@ table gate is aimed at ONE failure mode and was blind to the rest:
   leaving an orphaned satellite question that five stages then reasoned about).
   Discontinuities are reported per question-paper file for human follow-up.
 
+* SUPERSCRIPT AUDIT (report-only, 2026-08-10): docling flattens superscripted
+  digits into the adjacent number -- "65²" converts to "652", easy to misread
+  as a different value (recurring across multiple 4PH1 sittings). The source
+  PDF is scanned for superscripted spans (PyMuPDF span flags); files that
+  carry them are listed so numeric values get verified against the PDF, and
+  recurring cases recorded in corpus.content_limitations.
+
+* PER-PAGE SCAN CHECK (report-only, 2026-08-10): the whole-file no-text
+  threshold misses a long clean PDF with a few scanned pages inside it. Any
+  file above the threshold that still contains [no extractable text] page
+  placeholders is listed for OCR/PDF-direct follow-up of those pages.
+
+MS partial-row-loss cross-check lives in scripts/ms_row_coverage.py (run it
+after conversion): the pipe-count gate passes a mark scheme that lost single
+rows/cells while the table still parses -- 10+ verified instances in one 4PH1
+wave -- so per-question MS coverage is reconciled against the QP's
+"Total for Question N" lines there.
+
 Resumable: skips files already converted by THIS script (marker on line 1) and
 overwrites .md produced by anything else -- including older text-layer runs -- so
 a corpus upgrades in place on re-run. Flags docs with no extractable text (scans),
@@ -172,6 +190,43 @@ def convert_one_spec(pdf_path):
             parts.append(f"## Page {i}\n\n{text}\n")
     md = "\n".join(parts).rstrip() + "\n"
     return md, len(chunks), empty, None
+
+
+def lower_priority():
+    """--nice: a full-corpus conversion monopolises the machine (2026-08-10
+    feedback). Drop the process below normal priority so the desktop stays
+    usable; the run just takes a little longer."""
+    try:
+        if os.name == "nt":
+            import ctypes
+            handle = ctypes.windll.kernel32.GetCurrentProcess()
+            ctypes.windll.kernel32.SetPriorityClass(handle, 0x00004000)  # BELOW_NORMAL_PRIORITY_CLASS
+        else:
+            os.nice(10)
+        log("(running at below-normal priority: --nice)")
+    except Exception as e:
+        log(f"(--nice requested but could not lower priority: {e})")
+
+
+def pdf_superscript_count(pdf_path):
+    """Count superscripted spans in the source PDF (PyMuPDF flag bit 0).
+    Returns None when the check cannot run (no fitz, unreadable PDF)."""
+    try:
+        import fitz
+    except ImportError:
+        return None
+    try:
+        n = 0
+        doc = fitz.open(pdf_path)
+        for page in doc:
+            for block in page.get_text("dict").get("blocks", []):
+                for line in block.get("lines", []):
+                    for span in line.get("spans", []):
+                        if span.get("flags", 0) & 1:
+                            n += 1
+        return n
+    except Exception:
+        return None
 
 
 def pdf_has_bold(pdf_path):
@@ -299,6 +354,8 @@ def audit(md_text):
         "glyph_index_share": round(glyph_lines / len(nonblank), 3) if nonblank else 0.0,
         "vocab_lines": vocab_lines,
         "bold_marks": md_text.count("**") // 2,
+        # per-page scan check: placeholder pages inside an otherwise-clean file
+        "empty_pages": md_text.count("[no extractable text -- likely image/scan]"),
     }
 
 
@@ -316,7 +373,10 @@ def is_question_paper(path, pattern):
 
 def gate(records, ms_pattern):
     """Table-integrity + legibility + bold gates.
-    Returns (ok, table_failures, warnings, legibility_failures, bold_failures)."""
+    Returns (ok, table_failures, warnings, legibility_failures, bold_failures).
+    NOTE: report() additionally fails the run when the gate would have checked
+    ZERO mark schemes or ZERO specifications -- a gate that processed nothing
+    has failed, not passed (F63/F69)."""
     failures = [r for r in records if r["is_mark_scheme"] and r["pipes"] == 0 and r["chars"] > NO_TEXT_CHARS]
     warnings = [r for r in records if not r["is_mark_scheme"] and r["pipes"] == 0 and r["tables"] not in (0, None)]
     # F32: mostly glyph-index lines, or zero corpus vocabulary in a real file
@@ -338,11 +398,12 @@ def gate(records, ms_pattern):
     return ok, failures, warnings, legibility, bold
 
 
-def report(records, ms_pattern, root, no_text, scope=None):
+def report(records, ms_pattern, root, no_text, scope=None, no_spec_expected=False):
     """scope=None means the whole corpus; anything else is a partial run whose
     verdict must not be filed as the corpus-wide one."""
     ok, failures, warnings, legibility, bold = gate(records, ms_pattern)
     ms = [r for r in records if r["is_mark_scheme"]]
+    specs = [r for r in records if r.get("is_spec")]
     log("")
     if scope:
         log(f"PARTIAL RUN ({scope}) -- this verdict covers only what was converted here.")
@@ -360,6 +421,20 @@ def report(records, ms_pattern, root, no_text, scope=None):
         log("Either the corpus has no mark schemes (it must, before /hero-1-research)")
         log("or this board names them differently -- pass --ms-pattern to match them.")
         log("The gate is not allowed to pass by checking zero files.")
+    log(f"SPEC BOLD: {len(specs)} specification(s) checked, {len(bold)} failed")
+    if not specs and not no_spec_expected:
+        # Same F63/F69 shape as the mark-scheme case: the bold gate checked
+        # nothing, so it must not pass (2026-08-10 feedback -- it did, vacuously).
+        ok = False
+        log("")
+        log("=" * 72)
+        log("CONVERSION GATE FAILED -- NO SPECIFICATION RECOGNISED")
+        log("=" * 72)
+        log("Nothing under this root matched the spec pattern, so the bold gate")
+        log("(F44/F58 tier-marking survival) checked zero files. Either the spec is")
+        log("named differently (pass --spec-pattern), or it is genuinely stored")
+        log("outside this root -- in that case pass --no-spec to assert that")
+        log("deliberately and run this script over the spec's own directory too.")
     if no_text:
         log("")
         log(f"{len(no_text)} doc(s) had ~no extractable text (need OCR/PDF-direct "
@@ -412,6 +487,28 @@ def report(records, ms_pattern, root, no_text, scope=None):
                    if r.get("bold_in_pdf") is None
                    else f"PDF has bold, markdown has {r.get('bold_marks', 0)} ** pairs")
             log(f"   {r['file']}  ({why})")
+    # Per-page scan check (2026-08-10): a long clean PDF with a few scanned
+    # pages passes the whole-file threshold; these need OCR/PDF-direct
+    # follow-up of just those pages.
+    partial_scans = [r for r in records if r["chars"] > NO_TEXT_CHARS and r.get("empty_pages", 0) > 0]
+    if partial_scans:
+        log("")
+        log(f"PER-PAGE SCAN CHECK (report-only): {len(partial_scans)} text-bearing file(s) contain "
+            f"no-text page placeholders -- scanned/image pages inside an otherwise clean file.")
+        log("Check each flagged page against the PDF; recover what matters (OCR or PDF-direct)")
+        log("and record unrecovered pages in corpus.known_casualties:")
+        for r in sorted(partial_scans, key=lambda x: -x.get("empty_pages", 0))[:10]:
+            log(f"   {r['file']}  ({r['empty_pages']} empty page(s) of {r['pages']})")
+    # Superscript audit (2026-08-10): docling flattens "65²" to "652".
+    supers = [r for r in records if r.get("superscript_spans")]
+    if supers:
+        log("")
+        log(f"SUPERSCRIPT AUDIT (report-only): {len(supers)} file(s) carry superscripted spans in "
+            f"the source PDF. docling flattens these into the adjacent digits ('65²' -> '652'),")
+        log("which reads as a different number. Verify numeric values in these files against the")
+        log("PDF before quoting; record recurring cases in corpus.content_limitations:")
+        for r in sorted(supers, key=lambda x: -(x.get("superscript_spans") or 0))[:10]:
+            log(f"   {r['file']}  ({r['superscript_spans']} superscripted span(s))")
     orphaned = [r for r in records if r.get("part_discontinuities")]
     if orphaned:
         log("")
@@ -467,6 +564,14 @@ def report(records, ms_pattern, root, no_text, scope=None):
                         for r in orphaned
                     ],
                     "no_text": [r["file"] for r in no_text],
+                    "partial_scan_files": [
+                        {"file": r["file"], "empty_pages": r.get("empty_pages", 0), "pages": r["pages"]}
+                        for r in partial_scans
+                    ],
+                    "superscript_files": [
+                        {"file": r["file"], "superscript_spans": r.get("superscript_spans")}
+                        for r in supers
+                    ],
                     "unicode_artifact_files": [r["file"] for r in unicode_hits],
                 },
                 f,
@@ -507,7 +612,15 @@ def main():
                     help="regex identifying specification filenames (converted with pymupdf4llm, bold-gated)")
     ap.add_argument("--qp-pattern", default=DEFAULT_QP_PATTERN,
                     help="regex identifying question-paper filenames (orphan-part check)")
+    ap.add_argument("--nice", action="store_true",
+                    help="run at below-normal process priority so the machine stays usable")
+    ap.add_argument("--no-spec", action="store_true",
+                    help="assert the specification deliberately lives outside this root "
+                         "(otherwise a run that recognises zero specs FAILS, F63/F69)")
     args = ap.parse_args()
+
+    if args.nice:
+        lower_priority()
 
     root = args.root
     if not os.path.isdir(root):
@@ -544,15 +657,17 @@ def main():
                 "tables": None,
                 **a,
             }
+            sibling_pdf = os.path.splitext(p)[0] + ".pdf"
             if spec:
-                sibling_pdf = os.path.splitext(p)[0] + ".pdf"
                 rec["bold_in_pdf"] = pdf_has_bold(sibling_pdf) if os.path.exists(sibling_pdf) else None
             if is_question_paper(p, args.qp_pattern):
                 rec["part_discontinuities"] = part_discontinuities(text)
+            if os.path.exists(sibling_pdf):
+                rec["superscript_spans"] = pdf_superscript_count(sibling_pdf)
             records.append(rec)
             if a["chars"] < NO_TEXT_CHARS:
                 no_text.append(rec)
-        sys.exit(0 if report(records, args.ms_pattern, root, no_text, scope) else 1)
+        sys.exit(0 if report(records, args.ms_pattern, root, no_text, scope, args.no_spec) else 1)
 
     pdfs = find_pdfs(search_root)
     if args.limit:
@@ -590,6 +705,7 @@ def main():
                 rec["bold_in_pdf"] = pdf_has_bold(pdf)
             if is_question_paper(md_path, args.qp_pattern):
                 rec["part_discontinuities"] = part_discontinuities(text)
+            rec["superscript_spans"] = pdf_superscript_count(pdf)
             records.append(rec)
             continue
         try:
@@ -614,6 +730,7 @@ def main():
                 rec["bold_in_pdf"] = pdf_has_bold(pdf)
             if is_question_paper(md_path, args.qp_pattern):
                 rec["part_discontinuities"] = part_discontinuities(md)
+            rec["superscript_spans"] = pdf_superscript_count(pdf)
             records.append(rec)
             flags = ""
             if a["chars"] < NO_TEXT_CHARS:
@@ -632,7 +749,7 @@ def main():
 
     log(f"\nDONE converted={conv_n} skipped={skip} failed={failed} total={len(pdfs)} "
         f"in {(time.time() - run_start) / 60:.1f} min")
-    ok = report(records, args.ms_pattern, root, no_text, scope)
+    ok = report(records, args.ms_pattern, root, no_text, scope, args.no_spec)
     sys.exit(0 if (ok and failed == 0) else 1)
 
 

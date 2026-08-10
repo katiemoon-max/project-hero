@@ -45,12 +45,17 @@ Usage: python3 scripts/convert_qp_second_engine.py [--pattern "Question paper"]
 The pattern is matched against PDF filenames (substring); set it to the
 course's QP naming convention from project.json -> corpus.file_naming.
 """
+import argparse
+import functools
 import json
 import pathlib
 import sys
 import time
 import warnings
 import logging
+
+# Runs take minutes; a buffered pipe shows nothing until the end (2026-08-10 feedback)
+print = functools.partial(print, flush=True)
 
 warnings.filterwarnings("ignore")
 logging.disable(logging.INFO)
@@ -67,9 +72,13 @@ MARKER = "<!-- pymupdf4llm second-engine pass (F61/F64) -->"
 
 
 def main():
-    pattern = "Question paper"
-    if "--pattern" in sys.argv:
-        pattern = sys.argv[sys.argv.index("--pattern") + 1]
+    # argparse rejects unknown arguments -- the previous hand-rolled parsing
+    # silently ignored typos like --patern (2026-08-10 feedback)
+    ap = argparse.ArgumentParser(description="Second-engine (pymupdf4llm) pass over question papers, F61/F64.")
+    ap.add_argument("--pattern", default="Question paper",
+                    help="substring matched against PDF filenames; set from project.json -> corpus.file_naming")
+    args = ap.parse_args()
+    pattern = args.pattern
     qps = sorted(p for p in CORPUS.rglob("*.pdf") if pattern.lower() in p.stem.lower())
     if not qps:
         # F69 rule: a pass that processed nothing has failed, not passed
