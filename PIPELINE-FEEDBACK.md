@@ -369,3 +369,97 @@ copies must be refreshed deliberately.
 - [ ] **F122(2)** — star/bold adjacent-incompatibility (`**…Q9(c)***` — closing bold eats the star).
   Detection now ships in both starred-ref scripts; the CONVENTION (star outside the bold vs bolded
   citations drop the star) is Katie's call, then one line in WRITER/CHECKER
+
+## Corpus conversion — CPU cost and remote offload (2026-08-11, Edexcel IGCSE + GCSE Physics)
+
+Measured on an i5-1235U (2 P-cores + 8 E-cores = 12 logical) and a spare Ryzen 5 3500U (4C/8T,
+6.9 GB). Reference workload: 38-page Edexcel mark scheme; corpus scale 149 PDFs / 3,734 pages.
+Every row below was verified byte-for-byte against the committed 4PH1 corpus.
+
+### Conversion cost
+
+- [x] **`--nice` does not reduce CPU; thread oversubscription on hybrid CPUs does** — the 2026-08-07
+  `--nice` item treated priority as the remedy, but priority alone measures 5% (inside run-to-run
+  noise). docling schedules ~10 threads across fast P-cores and slow E-cores and burns CPU
+  spin-waiting. Affinity is the actual lever: pinning to the first 4 logical CPUs cut CPU 37%
+  (611 → 383 CPU-s) with **no wall-clock cost** and byte-identical output. 2 CPUs is cheaper still
+  (335 CPU-s) but +69% wall.
+  → addressed: `convert_pdfs.py --cpu-limit N` (Windows affinity mask + POSIX `sched_setaffinity`),
+  with the measurement table in `limit_cpus()` so it is not re-litigated
+- [x] **docling's own thread knobs are inert — do not reach for them** — `AcceleratorOptions(num_threads)`,
+  `OMP_NUM_THREADS` and `torch.set_num_interop_threads()` were each verified ineffective (parallelism
+  stayed at ~6.1x in all three cases; `OMP_NUM_THREADS` does cap intra-op threads 10 → 4, but the work
+  is in the inter-op pool). Only OS affinity binds.
+  → addressed: recorded in `limit_cpus()` docstring
+- [x] **TableFormer FAST mode must never be used on mark schemes** — 18% cheaper (611 → 503 CPU-s) and
+  it **silently drops marking points**. On one MS, two of three marking points vanished from a 3-mark
+  part; "award full marks for" appeared 8x under ACCURATE and 5x under FAST; rows duplicated and mark
+  columns mis-split. A table-integrity gate does not catch this — pipe counts went *up*.
+  → addressed: recorded here; no code change (ACCURATE is already the default, this is a "do not
+  optimise here" marker)
+
+### Reproducibility
+
+- [x] **`requirements.txt` pinned nothing that determines output bytes** — `docling>=2.107` floated, so
+  two machines could produce different markdown for the same PDF and silently fork a committed corpus.
+  Client deps for the remote path (`requests`, `docling-core`) were undeclared entirely; they happened
+  to be present on the machine that wrote them.
+  → addressed: `docling==2.107.0`, `docling-core==2.85.0`, `requests>=2.31`. The `docling-core` pin is
+  load-bearing on the CLIENT: `export_to_markdown()` runs client-side, so the client's version, not
+  the server's, decides the bytes
+- [ ] **Nothing enforces that server and client pins agree** — `remote_setup_windows.ps1` and
+  `requirements.txt` now carry the same three versions in two places, by hand. A mismatch is silent
+  and forks the corpus. Candidate: client sends its `docling-core.__version__` on the first request
+  and refuses to proceed on disagreement
+- [ ] **Any tool writing corpus `.md` must open with `newline="\n"`** — on Windows the default text mode
+  emits CRLF, which makes every line of every file differ from a local conversion. Cost this build two
+  false "total mismatch" results (once in the remote client, once from git's `autocrlf`). `convert_pdfs.py`
+  already does this correctly; the rule is undocumented anywhere a new script author would see it
+
+### Remote offload (docling-serve)
+
+- [x] **docling-serve gives ZERO local CPU saving — do not deploy it for that reason** — it is a FastAPI
+  wrapper around the same library loading the same torch models on the same machine: 583 vs 611 CPU-s,
+  byte-identical output. It is only worth anything on a *different* box
+- [x] **docling-serve does not expose `compact_tables`, which the pipeline depends on** — asking the
+  server for markdown roughly doubles table characters and forks the corpus.
+  → addressed: `remote_convert.py` requests `json` and runs `export_to_markdown(compact_tables=True)`
+  client-side; inference still happens remotely, the export is free
+- [x] **The synchronous endpoint has a 120 s ceiling that no client timeout can override** —
+  `DOCLING_SERVE_MAX_SYNC_WAIT` defaults to 120 s and returns 504. The original client set an 1800 s
+  *client* timeout and passed only because the reference machine was fast enough (35–44 s); on the
+  spare box the same PDFs took 135 s and 293 s, so every real conversion would have failed.
+  → addressed: client moved to `/v1/convert/file/async` + long-poll `/v1/status/poll/{id}`; launcher
+  also raises `DOCLING_SERVE_MAX_SYNC_WAIT` as defence-in-depth
+- [x] **Setup script silently reused a stale venv** — it version-checked `python` on PATH but created the
+  venv only if absent, so it reported "Python 3.14" while installing into a 3.13 venv. Root cause of two
+  failed runs.
+  → addressed: guard compares `pyvenv.cfg` against the checked interpreter and aborts before pip
+- [ ] **Python version guidance is inverted, and still wrong in the script text** — `docling-jobkit[ray]`
+  gates `ray~=2.52` on `python_version < "3.14"` and there is no cp313 Windows wheel, so **3.13 fails
+  with `ResolutionImpossible` and 3.14 is the only version that resolves** (the marker drops ray). The
+  process docs said the opposite, and `remote_setup_windows.ps1` line 34 still throws
+  "Install Python 3.12 or 3.13 first"
+- [ ] **Setup script reports success on a no-op firewall rule** — it creates the rule on the Private
+  profile without checking the adapter's active profile. On the spare box the WiFi adapter was Public,
+  so the rule was correct, enabled and did nothing; cross-machine `/health` failed until the network was
+  reclassified. Should read the active profile and either target it or say plainly why it will not work
+- [ ] **Offload economics do not generalise — state them before anyone rolls this out** — the spare box
+  ran ~9.8 s/page (~10 h for 3,734 pages) against ~2.3 h wall on the laptop, and `--concurrency 2` gave
+  no throughput gain while free RAM fell to 0.72 GB (docling already saturates 4 cores, and
+  `eng_loc_share_models=False` means each worker loads its own models). With `--cpu-limit 4` the laptop
+  finishes 4x sooner *and* leaves 8 logical CPUs free. Offload buys a fully idle machine and overnight
+  running — not speed — unless the remote box is genuinely stronger
+- [ ] **Conversion is byte-deterministic, so a corpus should be converted once and shared** — verified
+  identical across thread counts, affinity settings and an HTTP boundary. For a distributed team this
+  beats every hosting option: convert once, share the `.md`, and recipients validate with
+  `convert_pdfs.py --verify` without converting anything. Candidate: make the shared corpus the
+  documented default and treat local conversion as the exception
+
+### Environment
+
+- [ ] **Windows MAX_PATH headroom is thin on Pearson filenames** — board filenames run to 134 chars; the
+  4PH1 corpus tops out at 223-char full paths, ~248 under a typical OneDrive-synced profile, against a
+  260 limit. Deeper trees or longer usernames will fail with a bare "No such file or directory" from
+  docling on a file that plainly exists (seen once this build). Candidate: converter checks path length
+  up front and names the real cause

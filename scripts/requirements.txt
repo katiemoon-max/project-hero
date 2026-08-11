@@ -1,5 +1,18 @@
 commonmark>=0.9.1
-docling>=2.107
+
+# docling is PINNED, not floated. Conversion output is byte-deterministic for a
+# given version (verified 2026-08-11 across thread counts, CPU affinity and an
+# HTTP boundary) -- which is only useful if everyone runs the same version. A
+# different docling converts the same PDF differently, silently forking a corpus
+# that is already committed. Changing this pin means reconverting the corpus.
+docling==2.107.0
+
+# Client-side deps for remote_convert.py (remote docling-serve offload).
+# docling-core is pinned because export_to_markdown() runs on the CLIENT, so the
+# CLIENT's version -- not the server's -- decides the output bytes. This must
+# match the pin in remote_setup_windows.ps1. (2026-08-11 spare-machine test, D2.)
+docling-core==2.85.0
+requests>=2.31
 # pymupdf4llm (brings pymupdf/fitz): specification conversion + the bold gate
 # (F44/F58) -- docling drops bold, and boards use bold semantically
 pymupdf4llm>=0.0.17
