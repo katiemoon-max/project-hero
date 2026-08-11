@@ -30,14 +30,26 @@ $ErrorActionPreference = "Stop"
 Write-Host "=== Project Hero :: docling-serve setup ===" -ForegroundColor Cyan
 
 # --- 1. Python check -------------------------------------------------------
+# Counter-intuitively, 3.14 is the version that WORKS and 3.13 is the one that
+# fails. docling-jobkit[ray] requires ray~=2.52 gated on python_version < "3.14",
+# and ray ships no cp313 Windows wheel -- so 3.13 dies with ResolutionImpossible,
+# while on 3.14 the marker drops ray entirely and the install resolves.
+# (Learned the hard way, 2026-08-11 spare-machine test.)
 $py = (Get-Command python -ErrorAction SilentlyContinue)
-if (-not $py) { throw "python not found on PATH. Install Python 3.12 or 3.13 first." }
+if (-not $py) { throw "python not found on PATH. Install Python 3.14 first." }
 $ver = (& python -c "import sys;print('%d.%d'%sys.version_info[:2])").Trim()
 Write-Host "Python $ver at $($py.Source)"
 if ($ver -eq "3.14") {
   Write-Host "  NOTE: on 3.14 grpcio has no prebuilt wheel and cannot compile on" -ForegroundColor Yellow
   Write-Host "  Windows. This script works around it by installing the newest" -ForegroundColor Yellow
   Write-Host "  grpcio that does ship a 3.14 wheel, then pinning to it." -ForegroundColor Yellow
+} else {
+  throw ("Python $ver will not resolve docling-serve on Windows. Install Python " +
+         "3.14 and re-run.`n" +
+         "  Why: docling-jobkit[ray] needs ray~=2.52 when python_version < '3.14', " +
+         "and ray has no cp313 Windows wheel, so pip fails with " +
+         "ResolutionImpossible.`n" +
+         "  On 3.14 the dependency marker drops ray and the install succeeds.")
 }
 
 # --- 2. venv ---------------------------------------------------------------
@@ -46,6 +58,24 @@ $venv = Join-Path $InstallDir "venv"
 if (-not (Test-Path $venv)) {
   Write-Host "Creating venv at $venv ..."
   & python -m venv $venv
+} else {
+  # A venv left by a different interpreter is otherwise reused in silence, so the
+  # version reported above describes one Python while the install targets another.
+  # Not cosmetic: docling-jobkit's ray dependency is gated on python_version <
+  # "3.14", so a stale 3.13 venv fails to resolve while the log claims 3.14.
+  $cfg = Join-Path $venv "pyvenv.cfg"
+  $venvMinor = $null
+  if (Test-Path $cfg) {
+    $line = (Get-Content $cfg | Select-String '^\s*version\s*=' | Select-Object -First 1).Line
+    if ($line) { $venvMinor = ((($line -split '=')[1]).Trim() -split '\.')[0..1] -join '.' }
+  }
+  if (-not $venvMinor) {
+    throw "Cannot read a Python version from $cfg. Delete the venv and re-run: Remove-Item -Recurse -Force $venv"
+  }
+  if ($venvMinor -ne $ver) {
+    throw "Existing venv at $venv is Python $venvMinor, but 'python' on PATH is $ver. Delete the venv and re-run: Remove-Item -Recurse -Force $venv"
+  }
+  Write-Host "Reusing existing venv (Python $venvMinor)"
 }
 $pip = Join-Path $venv "Scripts\pip.exe"
 $serve = Join-Path $venv "Scripts\docling-serve.exe"
@@ -88,6 +118,30 @@ if (-not $NoFirewall) {
     New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Protocol TCP `
       -LocalPort $Port -Action Allow -Profile Private -RemoteAddress LocalSubnet | Out-Null
   }
+
+  # A rule on the Private profile does NOTHING while the active adapter is
+  # classified Public -- the rule reads as correct and enabled, and the port
+  # stays shut. That cost a debugging session on 2026-08-11, so say it plainly
+  # rather than reporting a success the network will not honour.
+  $activeProfiles = @()
+  try {
+    $activeProfiles = @(Get-NetConnectionProfile -ErrorAction Stop |
+                        Select-Object -ExpandProperty NetworkCategory -Unique)
+  } catch {}
+  if ($activeProfiles.Count -eq 0) {
+    Write-Host "  Could not read the active network profile -- if the laptop cannot reach this box, check it is Private." -ForegroundColor Yellow
+  } elseif ($activeProfiles -notcontains "Private" -and $activeProfiles -notcontains "DomainAuthenticated") {
+    Write-Host ""
+    Write-Host "  WARNING: the rule is on the Private profile, but this machine's" -ForegroundColor Yellow
+    Write-Host "  network is currently: $($activeProfiles -join ', ')" -ForegroundColor Yellow
+    Write-Host "  The rule will have NO EFFECT and the laptop will not reach port $Port." -ForegroundColor Yellow
+    Write-Host "  Fix by reclassifying the adapter (elevated):" -ForegroundColor Yellow
+    Write-Host "      Set-NetConnectionProfile -InterfaceAlias '<name>' -NetworkCategory Private" -ForegroundColor Cyan
+    Write-Host "  List adapters with:  Get-NetConnectionProfile" -ForegroundColor Cyan
+    Write-Host ""
+  } else {
+    Write-Host "  Active network profile is $($activeProfiles -join ', ') -- the rule applies."
+  }
 }
 
 # --- 6. launcher -----------------------------------------------------------
@@ -98,6 +152,11 @@ $runner = Join-Path $InstallDir "run-server.ps1"
 `$env:PYTHONUTF8 = "1"
 `$env:PYTHONIOENCODING = "utf-8"
 `$env:DOCLING_SERVE_API_KEY = (Get-Content "$keyFile" -Raw).Trim()
+# docling-serve 504s a synchronous /v1/convert/file that outruns this (default
+# 120s), regardless of the client's own timeout. A spare machine is by
+# definition the slow one: measured 135s for a 15-page mark scheme and 293s for
+# a 28-page one, so the default fails every real conversion.
+`$env:DOCLING_SERVE_MAX_SYNC_WAIT = "3600"
 Write-Host "docling-serve listening on 0.0.0.0:$Port  (Ctrl+C to stop)"
 & "$serve" run --host 0.0.0.0 --port $Port
 "@ | Out-File -FilePath $runner -Encoding utf8
