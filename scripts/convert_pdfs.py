@@ -208,6 +208,49 @@ def lower_priority():
         log(f"(--nice requested but could not lower priority: {e})")
 
 
+def limit_cpus(n):
+    """--cpu-limit: pin the process to the first N logical CPUs.
+
+    Measured 2026-08-11, i5-1235U (2 P-cores + 8 E-cores = 12 logical), on a
+    38-page mark scheme. Output was byte-identical at every setting:
+
+        all 12    103.8 s wall    611 CPU-s
+        first 8    96.7 s         583 CPU-s
+        first 6   109.2 s         521 CPU-s
+        first 4    98.0 s         383 CPU-s   <- best: -37% CPU, no wall cost
+        first 2   175.8 s         335 CPU-s   (wall +69%, not worth it)
+
+    Docling oversubscribes a hybrid CPU: threads land on the slow E-cores and
+    burn CPU spin-waiting. Pinning to the P-cores removes that waste. --nice
+    does NOT achieve this on its own -- the 8-CPU row above is essentially
+    --nice alone, and 5% is inside run-to-run noise.
+
+    Docling/torch's own knobs were all verified ineffective here:
+    AcceleratorOptions(num_threads=4), OMP_NUM_THREADS=4 and
+    torch.set_num_interop_threads(4) each left parallelism at ~6.1x. Only OS
+    affinity binds.
+
+    Pick N = the machine's performance-core count (typically half the logical
+    CPU count on a hybrid Intel part; on a uniform CPU, roughly half the cores).
+    """
+    total = os.cpu_count() or 1
+    if n < 1 or n > total:
+        log(f"(--cpu-limit {n} out of range 1..{total}; ignored)")
+        return
+    try:
+        if os.name == "nt":
+            import ctypes
+            k = ctypes.windll.kernel32
+            k.SetProcessAffinityMask.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+            if not k.SetProcessAffinityMask(k.GetCurrentProcess(), (1 << n) - 1):
+                raise OSError(ctypes.get_last_error())
+        else:
+            os.sched_setaffinity(0, set(range(n)))
+        log(f"(pinned to {n} of {total} logical CPUs: --cpu-limit)")
+    except Exception as e:
+        log(f"(--cpu-limit requested but could not set affinity: {e})")
+
+
 def pdf_superscript_count(pdf_path):
     """Count superscripted spans in the source PDF (PyMuPDF flag bit 0).
     Returns None when the check cannot run (no fitz, unreadable PDF)."""
@@ -614,6 +657,9 @@ def main():
                     help="regex identifying question-paper filenames (orphan-part check)")
     ap.add_argument("--nice", action="store_true",
                     help="run at below-normal process priority so the machine stays usable")
+    ap.add_argument("--cpu-limit", type=int, metavar="N",
+                    help="pin to the first N logical CPUs (see limit_cpus(): -37%% CPU at "
+                         "N=4 on a 12-logical hybrid part, identical output). Use with --nice.")
     ap.add_argument("--no-spec", action="store_true",
                     help="assert the specification deliberately lives outside this root "
                          "(otherwise a run that recognises zero specs FAILS, F63/F69)")
@@ -621,6 +667,8 @@ def main():
 
     if args.nice:
         lower_priority()
+    if args.cpu_limit:
+        limit_cpus(args.cpu_limit)
 
     root = args.root
     if not os.path.isdir(root):
