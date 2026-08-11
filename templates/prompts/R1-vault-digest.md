@@ -4,7 +4,7 @@ You will be given parameters: SUBTOPIC, UNIT, SP_NAMES (list of Cobalt spec-poin
 
 Read the vault SP note(s) at `<VAULT_NOTES_DIR>\<VAULT_FILE>` (one per spec point). If a note lacks a per-sitting exam-appearance table, check the vault for a companion exam-appearance file for that spec point (the orchestrator will name the location if one exists).
 
-Write ONE structured brief to `<RESEARCH_DIR>\vault-digest.md`. For multi-SP subtopics, give each spec point its own top-level section in SP_NAMES order. Per spec point include (omit any with no source content, noting the omission):
+Write ONE structured brief to `<RESEARCH_DIR>/vault-digest.md`. For multi-SP subtopics, give each spec point its own top-level section in SP_NAMES order. Per spec point include (omit any with no source content, noting the omission):
 
 1. **Spec text** — verbatim specification wording
 2. **Exam-appearance table** — the full per-sitting table (sitting, question ref, format, marks, what was asked)

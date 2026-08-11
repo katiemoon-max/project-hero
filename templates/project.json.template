@@ -127,10 +127,11 @@
     "preflight_sweep": "master mode pre-strip, --cobalt mode pre-upload",
     "upload_hold": "no upload until the user approves the wave sample"
   },
+  "pack_commit": "<the project-hero pack commit this project was set up from (F76) — the defined baseline for the /hero-2-write pack-freshness diff: a project file that differs from the pack at this commit and carries no PACK PROVENANCE header is a stale copy, not a customisation. Update on every deliberate pack refresh of the project>",
   "wave_size": "~15 subtopics (max 19)",
   "concurrency_cap": 20,
   "status": {
-    "_comment": "Every stage skill writes its own completion back here as its FINAL act (F30) — a status nobody writes to goes stale while staying authoritative-by-declaration. /hero cross-checks this block against the wave-state grid and warns on disagreement. blockers lists every blocker knowingly left open; an empty array on a project with a live blocker reads as a checked negative.",
+    "_comment": "Every stage skill writes its own completion back here as its FINAL act (F30) — a status nobody writes to goes stale while staying authoritative-by-declaration. /hero cross-checks this block against the wave-state grid and warns on disagreement. blockers lists every blocker knowingly left open; an empty array on a project with a live blocker reads as a checked negative. STALENESS DISCIPLINE (F113): every blocker entry is DATED, and any entry whose condition is machine-checkable (missing re-audits, untitled callouts) is CHECKED against the disk rather than trusted before anyone acts on it — a step whose record was never written is indistinguishable from a step never run, and the same gap ships unaudited content in the optimistic direction.",
     "stage": "<0-setup | 1-research | 2-write | 3-check | 4-publish — coarse pointer; wave-state files carry the detail>",
     "units_complete": [],
     "docs_live": 0,

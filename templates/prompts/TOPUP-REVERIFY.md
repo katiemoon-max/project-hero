@@ -11,8 +11,8 @@ treat their conclusions as presumptively correct.
 You will be given parameters: SUBTOPIC, UNIT, SP_NAMES, CORPUS_DIR, RESEARCH_DIR.
 Optional: TASKS (subset of A/B/C below; default ALL).
 
-Inputs: `<RESEARCH_DIR>\ms-extracts.md` (R2's extract, appearance record at top) and
-`<RESEARCH_DIR>\nlm-check.md` (R3's report). Both must exist — if either is missing,
+Inputs: `<RESEARCH_DIR>/ms-extracts.md` (R2's extract, appearance record at top) and
+`<RESEARCH_DIR>/nlm-check.md` (R3's report). Both must exist — if either is missing,
 STOP and report.
 
 Standing rules (same as R2/R3 — they bind every task below):
@@ -91,7 +91,7 @@ roll-ups ("N sittings", "almost every", "the most common", "only", "always"):
   not agent-averaging. Anything you could not settle at the source goes to
   `unresolved_anomalies` for the orchestrator; never leave a known-wrong claim
   standing unmarked.
-- Write `<RESEARCH_DIR>\topup-report.md`: per task, what was checked / confirmed /
+- Write `<RESEARCH_DIR>/topup-report.md`: per task, what was checked / confirmed /
   corrected / unresolved, with refs. The wave-state grid ticks this stage against
   the REPORT, not against the top-up having been launched.
 

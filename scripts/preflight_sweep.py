@@ -8,6 +8,10 @@ callout/blockquote checks that only apply to the stripped variant).
 FAIL checks (any hit blocks upload):
   - Mathematical Alphanumeric Symbols U+1D400-U+1D7FF (pasted from converted
     mark schemes; look like italics, break Cobalt fonts and search)
+  - Private Use Area characters U+E000-U+F8FF (F97: Pearson symbol fonts map
+    content glyphs -- half, delta, theta, degree, ohm -- to PUA codepoints that
+    render as NOTHING; one reaching a knowledge file means a quoted equation is
+    silently missing a symbol. Tabulated per codepoint, never in aggregate)
   - Escaped starred refs "Q\\*" — counted at byte level with text.count,
     NOT a regex (a regex once produced a multi-file false positive)
   - LaTeX \\Delta inside the file (house rule: Unicode increment U+2206)
@@ -27,6 +31,16 @@ REPORT checks (listed for orchestrator/fixer attention, not auto-failed):
     whose vault note carries the project's no-skills marker — validate the
     printed totals against the wave's OWN ruling list, never a handover's
     stated expectation (a handover's counts have been wrong before)
+  - Unverified-claim vocabulary (F109/F111/F106): "lost in conversion",
+    "did not survive conversion", "not recoverable", "cannot render",
+    "is not installed", "physically unavailable", "this environment cannot".
+    Each such claim must sit next to a list of the verification routes actually
+    tried (second-engine markdown, PDF text layer, rendered page image) -- a
+    claim naming a process or a tool where it should name a file/capability is
+    an inference from a sample of one. Review each hit against its context
+  - Unbounded quantifiers (F120): "every ... scheme" / "every Paper" without an
+    enumerated list in the same block -- a true observation inflated over a set
+    the note cannot have checked. Verify or re-scope each hit
 
 Usage:
   python preflight_sweep.py <file-or-dir> [more...] [--cobalt] [--skills-label "Mathematical skills"]
@@ -40,7 +54,12 @@ import sys
 from pathlib import Path
 
 MATH_ALNUM_RE = re.compile("[\U0001D400-\U0001D7FF]")
+PUA_RE = re.compile("[\uE000-\uF8FF]")
 OXFORD_RE = re.compile(r",\s+(?:and|or)\s")
+CLAIM_RE = re.compile(r"lost in conversion|did not survive conversion|not recoverable"
+                      r"|cannot render|is not installed|physically unavailable"
+                      r"|this environment cannot", re.IGNORECASE)
+QUANTIFIER_RE = re.compile(r"\bevery (?:one of )?(?:the )?(?:mark )?scheme|\bevery Paper", re.IGNORECASE)
 
 
 CLAUSE_OPENERS = ("which", "who", "where", "so", "but", "because", "though",
@@ -66,6 +85,17 @@ def sweep_file(path: Path, cobalt_mode: bool, skills_marker: str):
     hits = MATH_ALNUM_RE.findall(text)
     if hits:
         fails.append(f"U+1D400-block chars: {len(hits)} ({''.join(sorted(set(hits))[:10])})")
+
+    pua = PUA_RE.findall(text)
+    if pua:
+        # F97: tabulate per codepoint, never in aggregate -- the tail is where
+        # meaning lives (61 content glyphs hid behind 2360 benign checkboxes)
+        by_cp = {}
+        for ch in pua:
+            by_cp[ch] = by_cp.get(ch, 0) + 1
+        table = ", ".join(f"U+{ord(c):04X} x{n}" for c, n in sorted(by_cp.items()))
+        fails.append(f"Private Use Area chars (F97 -- invisible symbol-font glyphs; "
+                     f"strip 0xF000 and read as Adobe Symbol to identify): {table}")
 
     n_escaped = text.count(chr(92) + "*")
     if n_escaped:
@@ -103,6 +133,12 @@ def sweep_file(path: Path, cobalt_mode: bool, skills_marker: str):
         for m in OXFORD_RE.finditer(line):
             if looks_like_list(line, m.start()):
                 reports.append(f"L{i} Oxford-comma candidate: ...{line[max(0, m.start() - 40):m.end() + 20].strip()}...")
+        for m in CLAIM_RE.finditer(line):
+            reports.append(f"L{i} unverified-claim vocabulary (F109/F111 -- needs an adjacent "
+                           f"routes-tried list): ...{line[max(0, m.start() - 30):m.end() + 40].strip()}...")
+        for m in QUANTIFIER_RE.finditer(line):
+            reports.append(f"L{i} unbounded quantifier (F120 -- verify against an enumerated "
+                           f"list or re-scope): ...{line[max(0, m.start() - 30):m.end() + 40].strip()}...")
 
     sp = len(re.findall(r"^## Spec Point:", text, re.M))
     kt = text.count("**Key terminology:**")

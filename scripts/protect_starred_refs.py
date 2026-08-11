@@ -1,9 +1,12 @@
 """Protect starred question refs from markdown emphasis pairing.
 
-Standing rule: write starred refs as Q*17, never Q\\*17 (the backslash renders
-literally in Cobalt). The cost is that a bare '*' is a live emphasis delimiter,
-so a line carrying two refs -- or one ref plus any other italic/bold run -- can
-have its asterisks pair up and swallow the text between them.
+Standing rule (W-34/F85): the correct citation form is Q17(c)* -- the star on
+the PART, never on a main number (Q*17 is a form the board never prints;
+verify_starred_refs.py flags it as a defect). Either way the star is UNESCAPED:
+never Q\\*17 or Q17(c)\\* (the backslash renders literally in Cobalt). The cost
+is that a bare '*' is a live emphasis delimiter, so a line carrying two refs --
+or one ref plus any other italic/bold run -- can have its asterisks pair up and
+swallow the text between them.
 
 This is a build-time guard, not a style rule: the writer always types Q*17
 plain. Here we render each line and, only where a ref does not survive intact,
@@ -39,6 +42,11 @@ if bad:
 apply = "--apply" in sys.argv
 
 REF = re.compile(r"(?<!\*)Q\*[0-9]+")
+# W-34 part-form refs (Q9(c)*, Q10(d)(ii)*). The bold-wrap trick below does NOT
+# work for these -- wrapping produces "**Q9(c)***" and the closing bold eats the
+# star (F122). They are DETECTED here and reported for the convention fix, never
+# auto-wrapped.
+PART_REF = re.compile(r"Q[0-9]+\s*\([a-z]\)(?:\([ivx]+\))?\*")
 LABEL_RE = re.compile(r"^\*(Examples?[^\n]*?[:,.])\*(?=\s|$)", re.MULTILINE)
 
 
@@ -63,6 +71,14 @@ for ROOT in ROOTS:
     out = []
     n_lines = n_refs = 0
     for line in text.split("\n"):
+        # F122 detection: a part-form ref whose star does not survive rendering
+        # (typically inside a bold citation, "**... Q9(c)***"). No mechanical
+        # fix exists without a convention decision -- report, never rewrite.
+        for m in PART_REF.finditer(line):
+            if m.group(0) not in commonmark.commonmark(line):
+                print(f"  !! PART-REF BROKEN (F122, needs convention fix -- star vs bold): "
+                      f"{path.relative_to(ROOT)}: {line[:90]}")
+                break
         if REF.search(line) and not ref_survives(line):
             fixed = REF.sub(lambda m: f"**{m.group(0)}**", line)
             if ref_survives(fixed):

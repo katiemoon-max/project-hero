@@ -198,3 +198,174 @@ same day:
 - [x] **Zero-MCQ sanctioned absence pattern ratified** (course-owner ruling) and now in `templates/prompts/WRITER.md` — state the format context, the absence, and the near-miss; never fabricate sub-blocks, never improvise per file.
   → addressed: already landed in WRITER.md's exam-section rules (commit 4485fb3) —
   verified present; ticked for the record
+
+## Round 7 — 1PH0 findings F67–F113 + wave-2 check stage F117–F122 (triaged 2026-08-11)
+
+Source: `project-hero-F67-F113-2026-08-11.md` and `project-hero-F117-F122-2026-08-11.md`
+(Leander Oates, 1PH0 build; standalone extracts of `FINDINGS-FOR-KATIE-3.md`). Assessed and
+fixed against the pack at `94b96f7`. Same re-pull caveat as prior rounds — AND note F76 below:
+a re-pull alone updates nothing in an existing project; the project's `prompts/`/`scripts/`
+copies must be refreshed deliberately.
+
+### Closed without pack action
+
+- [x] **F67** — withdrawn by Leander (∆ codepoint; render test beats convention). `preflight_sweep.py`'s
+  message already carries the render-test evidence since round 6
+- [x] **F68–F71, F73, F74, F100 (template half)** — confirmed fixed at `9f255f3` by Leander's own
+  mechanical re-verification; nothing further owed
+- [x] **F69 (residual: partial-sweep silence)** — already fixed before this round:
+  `protect_starred_refs.py` and `verify_starred_refs.py` sweep ALL arguments recursively and cite F69;
+  Leander's retest predates the fix (it ran at `b17da98`)
+- [x] **F72 — CLOSED AGAIN, scoping works; do NOT escalate to the Cobalt team.** Re-opened 11 Aug on
+  all-null leaf read-backs; disproven same day by direct test on the re-issued
+  `doc_Y6xwXPYsmGCDSGf6`: `return_type: "subtopic"` → `sbt_MTSYCSv8JbgdqS8P` bound (the exact id in
+  `cobalt-structure.json`), `return_type: "spec_point"` → `spcpt_sV2vmcp4GCWPCCR7` bound. Null ids on
+  the `generic` leaf are DESIGNED (scope lives on typed ancestor chunks built from the document's own
+  headings); step 9's read-back spec says `no return_type`, so its nulls prove nothing. The 7 Aug
+  withdrawal was right both times.
+  → addressed: hero-4 step 9 now records this permanently, incl. "never assert non-null scope ids
+  on the leaf read-back — that gate would fail every correctly-scoped document"
+- [x] **F89** — moot: README.md carries no `Q*17` exemplar at this commit (Leander's own status note
+  said unconfirmed; grep confirms absent)
+- [x] **F112** — reserved, never raised; no action possible
+
+### Addressed this round
+
+- [x] **F75** (strip backstop vs checker title precedence) → hero-3 step 3: backstop is for callouts
+  no checker saw; a wave with an open check does not strip
+- [x] **F76** (pack re-pull updates nothing in the project) → `project.json` → `pack_commit` (template
+  + hero-0 §8), `PACK PROVENANCE` header convention, and a pack-freshness precondition in hero-2
+- [x] **F78 + F86** (WRITER exemplar vs CHECKER item 8 — **ruling: item 8 is the intent**) →
+  WRITER.md:30 exemplar now `Q6(b)(i)` (Leander's mark-scheme-verified part division) with the
+  main-number-alone-is-not-a-reference rule + the bare-invented-example carve-out defended; CHECKER
+  item 8 reworded from "headings" to "bold label lines" (the artefact the pack actually emits) with
+  the same carve-out. 1PH0's local WRITER.md fix is superseded by the pack version on next refresh.
+  **Wave-1 cost note: 1PH0's 42 part-less worked-example labels are a fix batch needing per-item
+  source lookups; the 45 starred refs resolve mechanically from ms-extracts (69 part-bearing hits upstream)**
+- [x] **F79** (rulings have no work-item mechanism) → hero-3 step 2: mandatory `Files swept:` line
+  enumerating all N masters with per-file verdicts; \<N entries = incomplete, mechanically checkable
+- [x] **F80** (item 21 caught none of four adjacent refutations) → CHECKER item 21 is now mechanical:
+  restate the count arithmetic in the report, passes included
+- [x] **F82** (brief/prompt precedence — 16 agents, 4 resolutions) → CHECKER output: format = this
+  file wins; what-to-check = brief additive
+- [x] **F83** (narrow pass overwrote hero-metrics; 8+ blockers vanished) → CHECKER: append
+  `pass=`-tagged line, never overwrite; hero-3: sum untagged lines + cross-check against `### B`
+  heading count
+- [x] **F84** (nothing verifies arithmetic inside a prescription) → CHECKER F54 rule: recompute every
+  numeric result, state it in the finding, name rounded-source divergence, hold replacements to every
+  content rule incl. stem-prescribed methods. *(Script half — numeric-equality flag in
+  fixer_diff_sweep — still open, below)*
+- [x] **F85** (verify_starred_refs certified the defect) → script rewritten: `Q*n` = DEFECT (exit 1),
+  part-form `Qn(x)*` render-checked, `--min-ref-lines` floor for the zero-match no-op case; the
+  defective exemplar also purged from WRITER.md:54, CHECKER item 13 and R2. Smoke-tested: catches
+  the defect form, the escape forms, and the star-eaten-by-bold case
+- [x] **F87** (Windows paths pack-wide) → 15 `<RESEARCH_DIR>\`/`<CORPUS_DIR>\` lines across 7 prompt
+  files → forward slashes; zero backslash placeholders remain
+- [x] **F88** (`rn.md` required with no producing step) → WRITER.md marks it conditional (RN-bearing
+  courses only; missing-on-RN-course = report, never silently absorb); hero-0 §6.6 names the
+  producing step (`findRevisionNote` per subtopic) or a dated `paths.rn_source: null` ruling
+- [x] **F90** (verify_starred_refs.py wired into nothing) → hero-4 gate 1, directly after the protect
+  step, exit 2 = step not satisfied
+- [x] **F91** (grid corrupted by 17 concurrent writers) → orchestrator owns the grid; agents report in
+  return messages and never write the state file (hero-3 bookkeeping + hero-2 W-marking + brief-footer
+  instruction)
+- [x] **F92** (11 of 17 fixers logged nothing; 3 date formats) → FIXER.md: `## Fixes applied — YYYY-MM-DD`
+  ISO, MANDATORY even on clean runs; hero-3's `F` derivation note carries the failure mode
+- [x] **F93** (fixer failure modes invisible from the orchestrator's seat) → hero-3 step 3: work lists
+  carry the EXPECTED POST-FIX STRING per item; completion = grep for it. (The dead-fixer warning was
+  already load-bearing and is untouched)
+- [x] **F94** (levelled locator fails on this course) → R2: indicative-content block is the
+  authoritative signal; asterisk demoted to corroborating hint; ref-typography tolerance rule added
+- [x] **F95** (seven dead items dispatched against a live doc) → FIXER.md: live-documents uncertainty
+  rule (UNRESOLVED, never a plausible edit) + superseded-finding check against wave-state rulings;
+  hero-3: overturn-sweep rule (strike dead findings in the reports, at the item, with the ruling id),
+  `depends-on: W-<n>` lines, stale-report flag at fixer dispatch
+- [x] **F97 (downstream half)** (invisible PUA glyphs pass every gate) → `preflight_sweep.py`: any
+  U+E000–F8FF character is a FAIL, tabulated per codepoint (never aggregate); hero-4 gate 2 names it.
+  *(Stage-0 normalisation + other-course sweeps still open, below)*
+- [x] **F99** (casualties list goes stale as a certificate of health) → R2: register is append-only
+  and agent-writable; absence from it is not evidence
+- [x] **F100 (prompt half)** (missing key read as "no limitations") → R3 both variants: absent ≠ empty;
+  a missing key is a setup defect to report
+- [x] **F102** (back-sweep detector couldn't detect its own defect; `\b9` bug made 32 false gaps) →
+  hero-3: every mechanical gate validated by FALSIFICATION before its clean run is trusted; format
+  coverage stated
+- [x] **F103** (six of six damage claims false) → R2: damage claims carry the burden of proof — fresh
+  narrow re-read, structural evidence inadmissible, upstream claims don't close the question;
+  claim vocabulary now flagged by preflight for the wave sweep
+- [x] **F104** (every false absence proved against a proxy) → R2: absence rows may cite only evidence
+  the content cannot avoid having (the MS's marking points, read); tier-twin check mandatory
+- [x] **F105** (§4 unusable as a work-list) → R3 both variants: per-ref disposition
+  (`GAP`/`CONFIRMED`), `**None.**` heading when all confirmatory
+- [x] **F106** (false "no PDFs exist" disabled the court of last resort) → R3: existence claims
+  recursive + command printed; restatement ≠ check; hero-0: counted recursive `corpus.inventory` as
+  the authority; hero-3 step 7 sweeps infrastructure claims FIRST
+- [x] **F107 + F109 (rule halves)** ("lost in conversion" names a process; a glyph left no text trace) →
+  R2/R3: three verification routes (second-engine tree → PDF text layer → RENDERED page image),
+  routes-tried list required for any unrecoverable claim, "symbol — reproduce as description";
+  preflight flags the claim vocabulary. *(Script halves open, below)*
+- [x] **F108** (a 2-constraint fit "confirmed" 3 unknowns) → R2: constraint-counting rule
+  (under-determined = candidate + anomaly, never confirmed), distractor rationale/tolerance bands as
+  first-class evidence, per-point converter re-test, `INFERRED —` prefix never inheriting a VERBATIM label
+- [x] **F111** (a missing binary reported as environment; two notes corroborating in a circle) → R2:
+  a blocker names a capability with alternatives tried; grounding terminates at a paper; hero-3 blind
+  re-audit note "check the method even when the answer is right" carried in step 7's sweep rule
+- [x] **F113** (record gap — the three asks, all taken) → (1) hero-3 step 5 writes its own dated
+  completion record into the wave-state file; (2) `/hero` derives re-audit state and machine-checkable
+  blockers from the disk; (3) template `status` block: dated blockers, checkable-checked discipline
+- [x] **F117 (rule half)** (spec quotes corrupt hyphenated compounds inconsistently) → WRITER quote-integrity
+  rule 2: converted spec FINDS a statement, never QUOTES one; compound terms verified at the spec PDF.
+  *(Gate script open, below)*
+- [x] **F118** (alias licence over-granted at file scope) → CHECKER item 23: the licence is held by a
+  spec point; check which `## Spec Point:` block the citation sits under
+- [x] **F119** (command-word reference quote flagged as paper-scope evidence) → CHECKER item 22:
+  reference-traceable quotations exempt; grep the reference dir before any paper-scope blocker
+- [x] **F120** (unbounded quantifiers read as confident prose) → CHECKER item 16 three-way grading +
+  `preflight_sweep.py` report-only regex
+- [x] **F121 (pointer half)** (brief names a file the tier flag is not in) → hero-2: verify file+field
+  on THIS project before writing the brief; boolean insufficiency routed to the existing
+  `"partial"` + note shape *(1PH0-side: move 2.31 to `"partial"` per the W-55 escalation)*
+- [x] **F122(1)** — 1PH0 briefing corrections, done on the project by Leander; **F122(3)** = F115, open below
+- [x] **Wave-close claims sweep** (the batch's structural ask: five defect classes, one discovery
+  route, zero detectors) → hero-3 NEW step 7 — all absence/damage/infrastructure claims read together
+  against the other files' extractions and stage 0's inventory, infrastructure first
+
+### Open — needs Katie's decision or a build
+
+- [ ] **F77** — Leander's judgement call: `convert_qp_second_engine.py` left un-refreshed to preserve
+  the provenance of a finished corpus. **Recommend: accept the deviation** (the artefact and its
+  producer should agree) and formalise via the now-conventional `PACK PROVENANCE` header — needs
+  Katie's word to Leander either way
+- [ ] **F81** — cross-file distribution sweep (histogram of shape-bearing features across a wave, no
+  pass/fail; the only structural detector for 100%-consistent defects like F70's 227/227). Small
+  build; complements the hero-3 step 7 claims sweep
+- [ ] **F84 (script half)** — `fixer_diff_sweep.py`: flag fixer-added lines carrying `=` between two
+  evaluable numeric expressions, report-only
+- [ ] **F96** — duplicate-SP detection: run the match test on the STATEMENT (record match class:
+  identical/superset/fragment/body-only; only identical auto-admits), add a third category
+  `statement_family` (general statement + context-bound instances — write every instance), state
+  "a superset is never a duplicate of its subset". Design decision on the sp-mapping shape — Katie
+- [ ] **F97 (stage-0 half)** — PUA normalisation in the converter (strip `0xF000`, read remainder as
+  Adobe Symbol, `[?U+XXXX]` for unmapped, skip Wingdings) — the ONLY workable remedy (re-conversion
+  and cross-engine comparison both read the same lying CMap). **Plus: sweep every OTHER Pearson-PDF
+  course this pipeline has converted (IAL export's 222 live docs, 4PH1) with the damage-side sweep —
+  masters' quoted lines vs repaired corpus — not the defect-side grep, which finds nothing downstream**
+- [ ] **F98** — stage 0 emits the second-engine tree's per-document-type manifest; cross-check rules
+  state their coverage ("QPs only on this course — MS/ER go straight to the PDF")
+- [ ] **F101 (residual)** — orchestrator-authored register entries carry inline evidence, verified at
+  the named line range before writing (the claims sweep now catches these late; this writes them
+  right at the source)
+- [ ] **F107/F109/F110 (script halves)** — adopt 1PH0's `page_drop_sweep.py` (with its positive +
+  negative controls) and the QP-only double-space sweep into the pack's stage-0 conversion report;
+  plus F110's measured-figure provenance rule (script in repo, controls stated, discarded detectors
+  recorded) as pack policy for any self-computed number
+- [ ] **F115 / F122(3)** — `spec_coverage_gate.py`: wave-scoped verdict. Design: failures grouped by
+  the tracker's wave/unit allocation; in-wave failures exit non-zero, out-of-wave debt prints as a
+  separate REPORT block ("this wave clear; course debt: N statements in waves 2+") — never a bare
+  GATE FAILED the agent has to read raw detail to interpret
+- [ ] **F117 (gate half)** — a script comparing each `## Spec Point:` statement quotation against the
+  spec PDF text, exact-match after whitespace normalisation (statement numbers known, one file;
+  sections 6/10/13 will hit the corrupted compounds still sitting in 1PH0's converted spec)
+- [ ] **F122(2)** — star/bold adjacent-incompatibility (`**…Q9(c)***` — closing bold eats the star).
+  Detection now ships in both starred-ref scripts; the CONVENTION (star outside the bold vs bolded
+  citations drop the star) is Katie's call, then one line in WRITER/CHECKER
