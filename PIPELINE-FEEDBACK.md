@@ -463,3 +463,49 @@ Every row below was verified byte-for-byte against the committed 4PH1 corpus.
   260 limit. Deeper trees or longer usernames will fail with a bare "No such file or directory" from
   docling on a file that plainly exists (seen once this build). Candidate: converter checks path length
   up front and names the real cause
+
+## PUA normalisation — F97 sweep reaches a second course (2026-08-11, Edexcel GCSE 1PH0)
+
+Triggered by the spare-machine test flagging 7 PUA characters in one converted mark scheme.
+The 7 it flagged were harmless; chasing them found a course that had never been swept.
+
+- [x] **`scripts/normalise_pua.py` — the F97 repair, as a reusable script** — the open F97 item asked
+  for PUA normalisation in the converter plus a sweep of every other Pearson-PDF course. This is the
+  sweep half, parameterised: `<corpus-root> [--dry-run]`, with a verified mapping table, an explicit
+  furniture list, an explicit unresolved list, and a loud UNKNOWN bucket for anything unclassified.
+  Applied to 1PH0: **271 substitutions across 22 files, 0 unknowns**. Idempotent (re-run reports
+  0 substitutable). Still owed: the IAL export's 222 live docs, and folding this into the converter
+  so new corpora arrive clean.
+  → the mapping is keyed per-codepoint but was VERIFIED per (codepoint, font); the script asserts
+  no codepoint is unclassified before writing
+- [x] **Map per (codepoint, font), never per codepoint alone** — `U+F053` is a tick in Wingdings2 but
+  Σ in Adobe Symbol; `U+F079` is 'y' in a text font but **½** in MSReferenceSpecialty. Deciding from
+  the codepoint alone would have written Σ into seven mark schemes. The census that makes this safe is
+  a PDF scan grouping by `(ord(char), span["font"])`, not a markdown scan — the markdown has lost the
+  font by definition
+- [x] **Nine mappings needed a page render, not reasoning** — context inference got most of the way,
+  but `U+F079` read as unremarkable (`(KE=) x 0.42 x 12^2`) until rendered, at which point the missing
+  **½** in a kinetic-energy calculation was obvious. `U+F04F`/`U+F0FB` proved to be ✗ (not ticks),
+  and `U+F0A3` a form checkbox. **Render before trusting a mapping that changes a number or an operator**
+- [x] **Do not substitute what the SOURCE cannot render** — one `U+F02D` renders as tofu in the PDF
+  itself (absent from the embedded subset), so no engine can recover it and any substitution is a guess.
+  It is listed as UNRESOLVED and left in place rather than repaired to something plausible
+- [x] **Large-bracket/radical pieces are not substitutable at all** — the Adobe Symbol `U+F8E5`–`U+F8FE`
+  range is *construction segments* for tall brackets and radicals (one file carries 51 of them drawing a
+  single `sqrt(` ). No single character stands in for a bracket segment; mapping them would misstate the
+  expression. Treated as furniture — but their presence marks an expression whose visual structure the
+  conversion has flattened, which is a research-time caution, not a repair
+
+### Two findings that outlive this sweep
+
+- [ ] **The damage is invisible to every existing gate** — a PUA character is present, so it is not an
+  empty page, not a lost table row, not a legibility failure. `n → p + e` converts to `n  p + e`: the
+  table gate passes, the glyph audit counts it, and nothing says the equation stopped being an equation.
+  The F20 audit found this on 4PH1 and 1PH0 still carried it 4 days later, on a corpus that had passed
+  its conversion gate. Candidate: converter fails, not reports, when a meaning-carrying PUA codepoint
+  (the known mapping table) appears outside the furniture set
+- [ ] **Corpora differ in line endings by conversion vintage** — 1PH0's markdown is CRLF while 4PH1's is
+  LF (`convert_pdfs.py` writes LF explicitly). Anything reconverting a 1PH0 file will flip it and show a
+  whole-file diff that looks like total corruption but is pure EOL. Any script touching a corpus in place
+  must read AND write with `newline=""` to preserve what is there — `normalise_pua.py` does. Candidate:
+  a one-off normalisation of 1PH0 to LF, deliberately, so the vintage difference stops being a trap
