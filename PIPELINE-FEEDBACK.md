@@ -8,6 +8,10 @@ citations name the course build that surfaced each item; wording is kept generic
 "addressed:" note on each names where. Fixes land from this commit; a build on an older
 pull does not have them.**
 
+**Triage pass 2026-08-11: the stage 3 re-audit + stage 4 publish section (filed 2026-08-10
+evening as a log-only commit) is now implemented — scripts, prompts, skills and template;
+each item's "addressed:" note names where. Same re-pull caveat.**
+
 ## From Stage 0 (course onboarding — 2026-08-07, Edexcel IGCSE Physics build)
 
 - [x] **Spec-bold gate passes vacuously when no spec file is present** — should fail loudly
@@ -137,17 +141,60 @@ same day:
 
 ### Script defects
 
-- [ ] **`strip_for_cobalt.py` argv is `[src, dst]` — a multi-file call silently clobbers the second file** with the stripped content of the first (overwrote a verified master; recovered from git, which is the only reason it was cheap). Fix: accept many files / a directory, and REFUSE to write any destination that exists as a non-`.cobalt` master.
-- [ ] **Markdown table cell-splitting via `str.strip('|')` eats ALL boundary pipes**, deleting an empty first cell — every continuation row orphans, statements truncate ("2.20 know that:"), and truncated blobs become containment WILDCARDS that steal text-join allocations (9 misallocations from 2 truncations). The original `spec_coverage_gate.py` has this same parse; fix is one-pipe-per-side splitting. Found while adapting the gate for 4PH1.
-- [ ] **Spec statement shapes the coverage-gate parser must handle beyond tables** (all present in the pymupdf4llm 4PH1 spec): fused multi-statement PROSE lines (1.3–1.10 on one line); statements inside PICTURE-TEXT blocks with `<br>` separators (whole of section 5(b)); bullets; singular "use the following unit"; table continuation rows. A monotonic statement-id filter guards decimals-in-text; 3-token split tracker rows need a specificity tie-break (shortest matching statement). Working adaptation: the build's `scripts/spec_coverage_gate_4ph1.py` — fold what generalises into the parameterised gate.
-- [ ] **`project.json` path fields must be PURE paths** — a glued human annotation inside `paths.syllabus_cross_check` broke the gate's file open. Convention adopted: companion `_note` field carries the prose. Worth a loud validation in any script reading a path from project.json.
-- [ ] **`fixer_diff_sweep.py` crashes printing U+2212 on cp1252 consoles** (workaround `PYTHONIOENCODING=utf-8`) — carried from the morning session in case not yet filed.
+- [x] **`strip_for_cobalt.py` argv is `[src, dst]` — a multi-file call silently clobbers the second file** with the stripped content of the first (overwrote a verified master; recovered from git, which is the only reason it was cheap). Fix: accept many files / a directory, and REFUSE to write any destination that exists as a non-`.cobalt` master.
+  → addressed: argparse rewrite — many files and/or directories, each writing its own
+  `.cobalt.md` sibling; `-o` restricted to exactly one input file; ALL destinations
+  validated before ANY write, and any destination that is not `.cobalt.md` is refused
+  (already-stripped inputs refused too). The exact old clobber call now exits 1 before
+  touching disk — exercised. hero-4 step 3 documents the new shape
+- [x] **Markdown table cell-splitting via `str.strip('|')` eats ALL boundary pipes**, deleting an empty first cell — every continuation row orphans, statements truncate ("2.20 know that:"), and truncated blobs become containment WILDCARDS that steal text-join allocations (9 misallocations from 2 truncations). The original `spec_coverage_gate.py` has this same parse; fix is one-pipe-per-side splitting. Found while adapting the gate for 4PH1.
+  → addressed: `split_row()` in `spec_coverage_gate.py` splits exactly one boundary pipe
+  per side; continuation rows (empty first cell, text in later cells) now CONTINUE the
+  previous statement instead of orphaning — smoke-tested on a synthetic spec with a
+  split-across-rows statement, covered in full
+- [x] **Spec statement shapes the coverage-gate parser must handle beyond tables** (all present in the pymupdf4llm 4PH1 spec): fused multi-statement PROSE lines (1.3–1.10 on one line); statements inside PICTURE-TEXT blocks with `<br>` separators (whole of section 5(b)); bullets; singular "use the following unit"; table continuation rows. A monotonic statement-id filter guards decimals-in-text; 3-token split tracker rows need a specificity tie-break (shortest matching statement). Working adaptation: the build's `scripts/spec_coverage_gate_4ph1.py` — fold what generalises into the parameterised gate.
+  → addressed: folded into the parameterised gate as config — `statement_shapes`
+  (`"prose"` enables fused-prose/bullet/picture-text parsing with `<br>` normalisation,
+  guarded by the monotonic-id filter), `bounds` (statement-region regexes),
+  `unallocated_whitelist_regex` (covers singular/plural "use the following unit(s)"
+  rulings, checks A/D only, never C) and `tier_from_bold: false` (loud SKIP of check B
+  for courses whose tier source is not PDF bold). Defaults reproduce 1PH0; both modes
+  smoke-tested (decoy decimals not parsed, appendix bounded out). The text-keyed
+  tracker join + shortest-statement tie-break does NOT generalise (the pack gate is
+  id-keyed) — the 4PH1 adaptation stays the reference for id-less trackers, named in
+  the gate docstring and the template comment
+- [x] **`project.json` path fields must be PURE paths** — a glued human annotation inside `paths.syllabus_cross_check` broke the gate's file open. Convention adopted: companion `_note` field carries the prose. Worth a loud validation in any script reading a path from project.json.
+  → addressed: `cfg_path()` in `spec_coverage_gate.py` — fails loudly on a missing,
+  non-string, whitespace-wrapped or unresolvable path value, naming the `<key>_note`
+  convention in the error (tested: an annotated value exits 1 with the remedy printed);
+  the convention itself now leads the template's `paths` block as its `_comment`
+- [x] **`fixer_diff_sweep.py` crashes printing U+2212 on cp1252 consoles** (workaround `PYTHONIOENCODING=utf-8`) — carried from the morning session in case not yet filed.
+  → addressed: stdout/stderr reconfigured to utf-8 (`errors="replace"`) at the top of
+  `main()` — no per-run env var needed; same guard added to `spec_coverage_gate.py`,
+  which also prints source glyphs. Tested printing a live U+2212 line
 
 ### Process findings
 
-- [ ] **F55 cost-model data point:** a wave given a full check+fix cycle AND pack patches BEFORE the blind re-audit yielded 1.7 blockers/file blind (27B/68F/0 anomalies over 16 files) vs ~10–13 on both prior builds' blind passes — the prior cycle cuts blind yield ~6x, yet blindness still surfaced ≥1 blocker in 12 of 16 signed-off files INCLUDING both creator-ratified pilot exemplars. Blindness stays the active ingredient; the cheap pass first makes the expensive pass sharper.
-- [ ] **Silent in-quote correction of board typos is a RECURRING writer failure mode** — 2 of 2 pilot exemplars did it ("less that", "eroneous"), and both packs had ALSO silently corrected the same typos inside verbatim blocks. WRITER/CHECKER emphasis + extend quote-integrity sweeps to pack verbatim blocks.
-- [ ] **Spec-quote glyph fidelity is a class check, not a per-file eyeball** — the spec prints U+2212 in "velocity−time"; drafts and both exemplars had U+2013; one re-auditor caught its file, MISSED two instances in another, and the mechanical class back-sweep (F51) caught what the per-file audit didn't. Add a glyph-compare of spec quotes against the converted spec to the checker's mechanical sweeps.
-- [ ] **Corpus retention needs a stage-0 agreement with the creator** — the course's 149 source PDFs were Explorer-deleted mid-build (archive reorganisation); recovered from the Recycle Bin, and four in-flight agents fell back to page dumps/converted-md/external mirrors meanwhile (all later re-verified at the restored originals). The pipeline's PDF-verification spine assumes the PDFs stay put until course close — say so explicitly at hero-0 and record where the corpus lives.
-- [ ] **Read-back query phrasing (F73 refinement):** at `min_score 0.01` an isolated bullet string can rank below an adjacent chunk — include the section-heading text alongside the target string, or raise `limit` and assert across the top hits. All 16 wave-1 read-backs verified; three needed the raised-limit path.
-- [ ] **Zero-MCQ sanctioned absence pattern ratified** (course-owner ruling) and now in `templates/prompts/WRITER.md` — state the format context, the absence, and the near-miss; never fabricate sub-blocks, never improvise per file.
+- [x] **F55 cost-model data point:** a wave given a full check+fix cycle AND pack patches BEFORE the blind re-audit yielded 1.7 blockers/file blind (27B/68F/0 anomalies over 16 files) vs ~10–13 on both prior builds' blind passes — the prior cycle cuts blind yield ~6x, yet blindness still surfaced ≥1 blocker in 12 of 16 signed-off files INCLUDING both creator-ratified pilot exemplars. Blindness stays the active ingredient; the cheap pass first makes the expensive pass sharper.
+  → addressed: recorded in hero-3 step 5 as the third F55 data point, with the reading
+  spelled out (cheap cycle first is not redundant with blindness — it sharpens it)
+- [x] **Silent in-quote correction of board typos is a RECURRING writer failure mode** — 2 of 2 pilot exemplars did it ("less that", "eroneous"), and both packs had ALSO silently corrected the same typos inside verbatim blocks. WRITER/CHECKER emphasis + extend quote-integrity sweeps to pack verbatim blocks.
+  → addressed: WRITER quote-integrity rule 1 and CHECKER item 6 both carry the
+  recurrence warning ("the itch to fix is precisely the failure"; a pack-matching quote
+  can still be wrong against the board — verify clean-looking quotes at the SOURCE);
+  TOPUP-REVERIFY standing rules now extend quote integrity to the pack's own verbatim
+  blocks — board typos the pack silently fixed are RESTORED with a dated marker
+- [x] **Spec-quote glyph fidelity is a class check, not a per-file eyeball** — the spec prints U+2212 in "velocity−time"; drafts and both exemplars had U+2013; one re-auditor caught its file, MISSED two instances in another, and the mechanical class back-sweep (F51) caught what the per-file audit didn't. Add a glyph-compare of spec quotes against the converted spec to the checker's mechanical sweeps.
+  → addressed: CHECKER item 2 — mechanical character-level compare of every spec quote
+  against the converted spec, look-alike table named (−/–/-, ×/x, ∆/Δ), one instance
+  triggers a whole-file sweep of the class
+- [x] **Corpus retention needs a stage-0 agreement with the creator** — the course's 149 source PDFs were Explorer-deleted mid-build (archive reorganisation); recovered from the Recycle Bin, and four in-flight agents fell back to page dumps/converted-md/external mirrors meanwhile (all later re-verified at the restored originals). The pipeline's PDF-verification spine assumes the PDFs stay put until course close — say so explicitly at hero-0 and record where the corpus lives.
+  → addressed: hero-0 §3 step 4 — explicit agreement with the user that the corpus
+  location is frozen until course close (or a move protocol agreed), recorded with date
+  in the new `corpus.retention_agreement` template field
+- [x] **Read-back query phrasing (F73 refinement):** at `min_score 0.01` an isolated bullet string can rank below an adjacent chunk — include the section-heading text alongside the target string, or raise `limit` and assert across the top hits. All 16 wave-1 read-backs verified; three needed the raised-limit path.
+  → addressed: hero-4 step 9, ahead of the investigate-never-re-issue rule — heading
+  text alongside the target string, or raised `limit` asserting across top hits
+- [x] **Zero-MCQ sanctioned absence pattern ratified** (course-owner ruling) and now in `templates/prompts/WRITER.md` — state the format context, the absence, and the near-miss; never fabricate sub-blocks, never improvise per file.
+  → addressed: already landed in WRITER.md's exam-section rules (commit 4485fb3) —
+  verified present; ticked for the record

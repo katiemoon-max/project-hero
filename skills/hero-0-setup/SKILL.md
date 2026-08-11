@@ -52,6 +52,7 @@ Every research stage greps and quotes **locally converted markdown**: R2 reads t
    - Where papers are login-gated on the board site (common for recent sittings), the user's teacher-portal login or the SME internal paper store are the fallbacks
    - Pulling text back out of NotebookLM via `source_get_content` is a LAST resort — you get NLM's extraction instead of a controlled conversion, and it needs the user's explicit go-ahead
 3. Move on only when the QP/MS inventory is complete for every sitting. Missing ERs are fine (they set the research mode at §5); missing QPs or MSs are not.
+4. **Corpus retention agreement (2026-08-10).** The pipeline's PDF-verification spine assumes the source PDFs stay at `paths.corpus_root` — in place, unrenamed, unmoved — until course close: every F62 anomaly check, tier font-span adjudication and absence claim re-opens them, wave after wave. That assumption was never stated to anyone who manages the disk, and on a live build the entire 149-PDF corpus was Explorer-deleted mid-wave by an archive reorganisation; it came back from the Recycle Bin, but four in-flight agents had meanwhile fallen back to page dumps, converted-md and external mirrors, all of which then needed re-verification against the restored originals. So say it explicitly NOW: agree with the user that the corpus location is frozen until course close (or agree a move protocol), and record the agreement + date in `project.json` → `corpus.retention_agreement`.
 
 ## 4. NotebookLM notebook
 

@@ -34,6 +34,7 @@ is still what git HEAD (or --ref) holds. Exit codes: 0 = swept (hits or not),
 import argparse
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 CERTAINTY_PATTERNS = [
@@ -96,6 +97,15 @@ def added_lines(path: Path, ref: str):
 
 
 def main() -> None:
+    # Swept lines carry source glyphs a cp1252 console cannot encode — U+2212
+    # crashed the whole sweep in production (2026-08-10). Reconfigure rather
+    # than depending on every caller remembering PYTHONIOENCODING=utf-8.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
     ap = argparse.ArgumentParser(
         description="Scan the lines a fixer ADDED (git diff vs a ref) for "
         "manufactured-certainty patterns and new quoted spans. Report-only.",

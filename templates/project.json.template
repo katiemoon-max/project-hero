@@ -16,6 +16,7 @@
     "tier_source": "<WHERE per-SP tier/level facts come from, named explicitly (F59): the converted spec CANNOT carry them (bold marking does not survive docling), so name the machine-readable source — e.g. 'tracker col 5 Higher Tier Only, adjudicated at the spec PDF font spans'. No writer should have to rediscover this>"
   },
   "paths": {
+    "_comment": "PURE PATHS ONLY (2026-08-10): every value in this block is a bare path a script can open — never glue an annotation onto one (a glued note inside paths.syllabus_cross_check broke the coverage gate's file open in production). Prose about a path goes in a companion '<key>_note' field beside it; scripts reading these fields validate loudly and fail on a value that does not resolve.",
     "project_dir": "<absolute path to this project directory>",
     "vault_notes": "<LEGACY — absolute path to a pre-existing per-SP vault, only where /hero-1-research's adoption path is used; null on fresh builds>",
     "skills_map": "<path to skills-map.json — per-SP skills mapping read DIRECTLY from the specification at /hero-0-setup §7 (never via NotebookLM); null only with an explicit dated ruling>",
@@ -43,6 +44,7 @@
   },
   "corpus": {
     "kind": "<local | notebook | mixed — what the corpus physically is; a converted local QP/MS corpus is required before /hero-1-research in every research mode>",
+    "retention_agreement": "<dated agreement with the user (captured at /hero-0-setup §3, 2026-08-10) that the source PDFs at paths.corpus_root stay in place, unrenamed and unmoved, until course close — the pipeline's PDF-verification spine (F62 anomaly checks, tier font-span adjudication, every absence claim) re-opens them throughout. On a live build the corpus was Explorer-deleted mid-wave by an archive reorganisation; four in-flight agents fell back to page dumps and external mirrors, all needing re-verification after recovery>",
     "unit_dir_pattern": "<how unit/paper subdirectories are named, e.g. 'Unit <N>'>",
     "file_naming": "<per-sitting file naming, e.g. '<YYYY> <Mon> - Question paper.md / - Mark scheme.md / - Examiner report.md'>",
     "sitting_variants": "<how resit/variant sittings are marked, e.g. '(A)'-suffixed sittings are separate files>",
@@ -77,8 +79,16 @@
     ]
   },
   "spec_coverage": {
-    "_comment": "Read by scripts/spec_coverage_gate.py (2026-08-10: parameterised after a second course needed a text-keyed rewrite of the hard-coded 1PH0 tracker shape). Defaults reproduce 1PH0 — VERIFY per course and check the parsed statement count against the tracker's total (F59).",
+    "_comment": "Read by scripts/spec_coverage_gate.py (2026-08-10: parameterised after a second course needed a text-keyed rewrite of the hard-coded 1PH0 tracker shape; statement-shape/whitelist/tier keys folded back from the 4PH1 adaptation the same day). Defaults reproduce 1PH0 — VERIFY per course and check the parsed statement count against the tracker's total (F59). A tracker with NO statement ids needs a text-keyed join beyond configuration — see the 4PH1 build's spec_coverage_gate_4ph1.py for the reference adaptation.",
     "statement_id_regex": "<regex for the board's spec statement ids, e.g. '\\\\d{1,2}\\\\.\\\\d{1,2}[PH]?' for Edexcel GCSE '2.23'/'11.10P'>",
+    "statement_shapes": ["table"],
+    "_statement_shapes_note": "add 'prose' where the converted spec carries statements OUTSIDE tables — fused prose runs (4PH1's 1.3–1.10 on one line), bullets, picture-text blocks with <br> separators. Prose mode turns on a monotonic statement-id guard so decimals inside statement text are never taken as ids; set bounds when using it",
+    "bounds": { "start_regex": null, "end_regex": null },
+    "_bounds_note": "optional line regexes bounding the statement region of the converted spec (e.g. first statement → appendix); prose mode wants these so front-matter and appendices cannot leak ids",
+    "unallocated_whitelist_regex": null,
+    "_unallocated_whitelist_note": "normalised statement texts matching this regex are SANCTIONED as unallocated (exempt from checks A and D, never C) — record the ruling's date here too, e.g. 4PH1's '^use the following units?' rows, user ruling 2026-08-07. Note the singular/plural: the board prints both 'unit' and 'units'",
+    "tier_from_bold": true,
+    "_tier_from_bold_note": "false skips check B loudly, for courses whose tier source is not PDF bold (e.g. 4PH1's P-suffix) — tier is then adjudicated at course.tier_source",
     "tracker": {
       "first_data_row": 2,
       "definition_col": "<header text (unique case-insensitive substring in the header rows) or 0-based index of the authoritative definition column>",

@@ -26,6 +26,13 @@ Standing rules (same as R2/R3 — they bind every task below):
 - Sweep equation-SYMBOL forms as well as topic words (`W\s*=\s*mg`); filename
   matching is case-insensitive
 - Quotes running to a `## Page N` marker continue past it
+- **Quote integrity extends to the PACK's own verbatim blocks (2026-08-10):**
+  both pilot packs had silently corrected the board's own typos ("less that",
+  "eroneous") inside verbatim extracts — downstream writers then inherit the
+  corrected form and every pack-keyed check passes. Wherever a task below has
+  you at a source document, compare the pack's verbatim text character-for-
+  character and RESTORE any board typo the pack silently fixed, with a dated
+  correction marker
 
 ## Task A — §4 gap-list top-up, with independent re-verification
 
