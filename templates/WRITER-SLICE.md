@@ -26,7 +26,7 @@ Calibration result: roughly a 3× cost reduction at equal output quality versus 
 | Tier flags | `sp-mapping.json` per-SP `true \| false \| "partial"` + note (F50/F56) — passed to writers as HIGHER_TIER_ONLY; tier is never inferred from paper appearances or the converted spec |
 | Exemplars | `project.json` → `exemplars` + the project README's template rules block |
 
-Working files: `research/<unit-key>/<Subtopic>/` — `rn.md`, `vault-digest.md`, `ms-extracts.md`, `nlm-check.md`. Kept as grounding evidence for proofing.
+Working files: `research/<unit-key>/<Subtopic>/` — `rn.md` (coverage/register reference only, never a content source — F148), `vault-digest.md`, `ms-extracts.md`, `nlm-check.md`. Kept as grounding evidence for proofing.
 
 ## Stage R — research
 

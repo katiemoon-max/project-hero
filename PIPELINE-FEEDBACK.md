@@ -509,3 +509,81 @@ The 7 it flagged were harmless; chasing them found a course that had never been 
   whole-file diff that looks like total corruption but is pure EOL. Any script touching a corpus in place
   must read AND write with `newline=""` to preserve what is there — `normalise_pua.py` does. Candidate:
   a one-off normalisation of 1PH0 to LF, deliberately, so the vintage difference stops being a trap
+
+## Round 8 — 1PH0 findings F144–F150 (part 5) + F-series allocator (triaged 2026-08-12)
+
+Source: `Findings for Katie 5 - 1PH0 - 12 Aug 2026.md` (Leander Oates, 1PH0 build; wave-2 publish
+run, gates 5–7). Assessed and fixed against the pack at `b563d90`. F144–F147 are cited as
+"F144 (part 5)" etc per the interim numbering convention — the numbers collide with
+`FINDINGS-FOR-KATIE-3.md`'s allocations; F148–F150 are uncontested. Same re-pull caveat as prior
+rounds: an existing project's `prompts/`/`scripts/` copies must be refreshed deliberately.
+
+### The one that matters
+
+- [x] **F148 (HIGH — `rn.md` named "the content backbone"; it is the wrong backbone and it shipped)** →
+  the round-7 F88 fix formalised the RN's primacy instead of questioning it; this round reverses that.
+  WRITER.md item 3 rewritten: the backbone on EVERY course is `ms-extracts.md` + the ER evidence;
+  `rn.md` demoted to *coverage checklist and register reference only* — no method, no worked example,
+  no marking claim may be sourced from it, with the F148 history stated in place so the wording cannot
+  quietly regress. The line-29 "clean RN-sourced teaching examples" licence is REVOKED; the bare
+  unattributed `**Worked Example**` form is RETIRED (F148/F150 supersede the two-form rule — every
+  worked example traces to a named paper via its label line; thin is honest, invented is a defect;
+  never retrofit an attribution, F37). CHECKER.md: `rn.md` REMOVED from ground truth (a claim
+  supported only by rn.md is unsupported); item 8's invented-example carve-out replaced by a BLOCKER;
+  item 16 gains the marking-claim provenance check. WRITER.md manufactured-certainty list gains the
+  RN-derived-marking-claims ban (the "two marks usually means two named things" instance recorded).
+  hero-0 §6.6 (F88) and WRITER-SLICE bound the RN's role at the producing step too.
+  **NOT pack-closable: 1PH0 wave 1's 17 live documents and wave 2's 17 drafts were written under the
+  old prompt, and every other RN-bearing course this pack built has the same exposure (the IAL
+  export's 222 live docs included). Sweep scope and re-issue are course-owner calls — Leander's
+  hold-at-gate-7 stands.**
+- [x] **F149 (HIGH — no gate tests whether a marking claim traces to a paper)** →
+  `scripts/rn_derived_sweep.py` added to the pack: shortlist generator (never a gate — verbatim ER
+  quotation is a legitimate hit), flags marking-vocabulary sentences under unbounded quantifiers
+  whose containing block carries no paper reference; blocks cut at headings/callout boundaries,
+  never a line window. Docstring records WHY overlap-with-rn.md sweeps do not work (0.000 5-gram
+  overlap on the known-false claim — paraphrase makes RN derivation lexically invisible). Wired into
+  hero-4 gate 2. **This copy is a fresh implementation of F149's published spec — reconcile with the
+  1PH0 original (written by Leander's run, not available to import) when the project copy is
+  upstreamed.**
+- [x] **F150 (worked-example provenance unchecked; 4 of 6 wave-2 examples had none)** →
+  `preflight_sweep.py` gains a REPORT check: every `**Worked Example` block must carry a paper
+  reference INSIDE the block — scoped label-line-to-next-heading, never a line window (both wrong
+  numbers in the 1PH0 ledger were window-scoping artefacts). Non-blocking at preflight; the CHECKER
+  blocks the same defect (bare unattributed worked examples are BLOCKERS since F148/F150).
+
+### Gate defects (found in one wave-2 publish run)
+
+- [x] **F144 (part 5) (HIGH — coverage gate discards enumerated statement items, then fails the doc
+  for not covering them)** → Leander's measured fix adopted verbatim into `written_quotes()`:
+  id-less `>` continuation lines append to the statement above; `cur` reset outside blocks.
+  Unit-tested here (enumerated items retained, id-carrying continuations still split, reset works).
+  His measurement on the whole 1PH0 corpus: exactly one result moves (3.5 FAIL → covered).
+  **Worth sweeping other courses: any shipped wave quoting an enumerated statement passed check C
+  only because the items were invisible to it — 4PH1 should re-run the gate at this commit.**
+- [x] **F145 (part 5) (exit code conflates setup-time and publish-blocking halves)** → `--stage
+  setup|publish` (default publish): all four checks always print; the exit code answers for one
+  half; the verdict line names which half failed and carries an informational NOTE for the other.
+  hero-4 gate 5 invokes `--stage publish`, hero-0 §5.6 invokes `--stage setup`.
+- [x] **F146 (part 5) (orphan AO-overflow table row merged into the statement above → wholly-Higher
+  reported as partly-Higher)** → continuation-row merge now requires a non-empty STATEMENT cell;
+  id-less text-less rows are skipped. Unit-tested (2.25 shape stays "all"; genuine continuations
+  still merge). The 2.31 half of the finding (tracker holds a genuine partial as one untiered row)
+  is course data, not pack code — correctly flagged, stays a tracker fix.
+- [x] **F147 (part 5) (gate 6 checks a mitigation is recorded, never that the pointer resolves)** →
+  hero-4 gate 6: every `content_limitations` `ruling` id is mechanically resolved in the wave-state
+  file; dangling/absent id BLOCKS; meaning-match stays the human half at the hold. Template's
+  `content_limitations` entries gain an explicit `ruling` pointer field documenting the contract.
+- [x] **F-series allocator (F145 part 3's minimum fix, restated in part 5's preamble)** →
+  `project.json` template gains `next_finding_number` (+ allocation rule: take the number and
+  increment IN THE SAME EDIT) and `paths.findings_log`. 1PH0 triple-allocated F144–F146 across
+  three same-day sessions; one collision was already broadcast to fourteen agents.
+
+### Shape worth keeping (Leander's synthesis, recorded verbatim in spirit)
+
+- F144 and F147 share a failure mode: **a gate testing the PRESENCE of something rather than its
+  content** — a quote line rather than the quote, a ruling field rather than the ruling. F148–F150
+  extend it past the gates: every gate tested the FORM of a knowledge file; nothing tested where its
+  content came from. Six green gates were silent on the only question that mattered.
+- The 1PH0 ledger's method note, now encoded in two scripts: **a provenance detector measured over a
+  line window will clear content it has not actually checked.** Scope to the semantic block.

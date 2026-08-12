@@ -59,8 +59,15 @@ A statement may be split across several knowledge files (2.23's equilibrium and
 collision halves) or several statements merged into one file, so coverage is
 tested as a UNION over every file quoting that statement, never file by file.
 
-Usage: python3 scripts/spec_coverage_gate.py [--pdf-cache PATH]
-Exit 1 if any statement is written but incomplete, or allocated but unfindable.
+Usage: python3 scripts/spec_coverage_gate.py [--pdf-cache PATH] [--stage setup|publish]
+All four checks are always RUN and printed; --stage picks which half the EXIT
+CODE answers for (F145: a single conflated exit meant any course carrying
+known, accepted setup-time findings could never return 0 at publish again —
+the run that exposed it printed C/D PASS and still said GATE FAILED, which
+teaches the orchestrator to read past the verdict). --stage publish (the
+default — the BLOCKING call at /hero-4-publish gate 5) exits 1 only on C/D
+failures, reporting A/B as informational; --stage setup (the /hero-0-setup §5
+call) exits 1 only on A/B. The verdict line names which half failed.
 """
 import csv, json, re, sys, pathlib
 
@@ -198,9 +205,13 @@ def pdf_statements(md):
                     continue
                 out[m.group(2)] = (raw, bold_extent(raw))
                 last = m.group(2)
-            elif not cells[0] and last and any(cells[1:]) \
+            elif not cells[0] and last and len(cells) > 1 and cells[1] \
                     and not all(re.fullmatch(r":?-{2,}:?", c) for c in cells[1:] if c):
-                # continuation row: empty id cell, statement text carries on
+                # continuation row: empty id cell, statement text carries on.
+                # The STATEMENT cell must be non-empty (F146): an id-less,
+                # text-less row is an overflow row for a later column (1PH0's
+                # AO-code column) — merging it contributes unbolded text and
+                # reports a wholly-Higher statement as partly-Higher. Skip it.
                 raw = out[last][0] + " " + " ".join(c for c in cells[1:] if c)
                 out[last] = (raw, bold_extent(raw))
             continue
@@ -270,18 +281,35 @@ def written_quotes(kdir):
     """id -> [(file, quoted text)].
 
     A quote block is `> **Specification:** <id> <text>`, but a block may carry
-    FURTHER statements on bare continuation lines (`> 2.2 Explain that...`).
-    Reading only the header line silently under-counts what was written."""
+    FURTHER statements on bare continuation lines (`> 2.2 Explain that...`),
+    and a statement's own text may continue on ID-LESS quote lines — an
+    enumerated list (`> a an object projected upwards...`) is the commonest
+    statement shape there is. Reading only the header line silently
+    under-counts what was written; keeping only id-carrying lines (the first
+    fix) still discarded the enumerated items, so check C compared the PDF
+    against a quote missing every list item and FAILED a correct document
+    (F144, 1PH0 statement 3.5). Id-less quote lines are appended to the
+    statement above them. Measured before adopting (whole 1PH0 corpus): moves
+    exactly one result, 3.5 FAIL -> covered; recovers discarded text rather
+    than loosening the test."""
     q = {}
     head = re.compile(r"^>\s*\*\*Specification:\*\*\s*(" + ID.pattern + r")\s+(.*)$")
     cont = re.compile(r"^>\s*(" + ID.pattern + r")\s+(.*)$")
     for f in sorted(pathlib.Path(kdir).rglob("*.md")):
         inblock = False
+        cur = None
         for line in f.read_text(encoding="utf-8").split("\n"):
             m = head.match(line) or (cont.match(line) if inblock else None)
             inblock = bool(m) or (inblock and line.startswith(">"))
             if m:
-                q.setdefault(m.group(1), []).append((f.name, m.group(2)))
+                cur = (m.group(1), len(q.setdefault(m.group(1), [])))
+                q[m.group(1)].append((f.name, m.group(2)))
+            elif inblock and cur and line.startswith(">"):
+                k, i = cur
+                fn, txt = q[k][i]
+                q[k][i] = (fn, txt + " " + line.lstrip("> ").rstrip())
+            if not inblock:
+                cur = None
     return q
 
 
@@ -302,6 +330,9 @@ def main():
         except (AttributeError, ValueError):
             pass
 
+    stage = sys.argv[sys.argv.index("--stage") + 1] if "--stage" in sys.argv else "publish"
+    if stage not in ("setup", "publish"):
+        sys.exit(f"--stage must be 'setup' or 'publish', got {stage!r}")
     cache = pathlib.Path(sys.argv[sys.argv.index("--pdf-cache") + 1]) if "--pdf-cache" in sys.argv else None
     if cache and cache.exists():
         md = cache.read_text(encoding="utf-8")
@@ -328,7 +359,7 @@ def main():
 
     print(f"PDF statements: {len(pdf)}   tracker statements: {len(alloc)}   written: {len(quotes)}"
           + (f"   whitelisted-unallocated: {len(wl)}" if wl else "") + "\n")
-    fail = 0
+    fails = {"A": 0, "B": 0, "C": 0, "D": 0}
 
     print("== A. Allocation — every statement exists in both sources and has a subtopic home ==")
     only_trk = sorted(set(alloc) - set(pdf), key=order)
@@ -339,7 +370,7 @@ def main():
         print(f"  FAIL  in the PDF, no tracker subtopic — nothing on site owns these ({len(only_pdf)}):")
         for sid in only_pdf:
             print(f"          {sid}  {norm(pdf[sid][0])[:88]}")
-    fail += bool(only_trk) + bool(only_pdf)
+    fails["A"] += bool(only_trk) + bool(only_pdf)
     if not (only_trk or only_pdf):
         print("  PASS  both sources carry the same statement set"
               + (f" ({len(wl)} unallocated by whitelist ruling)" if wl else ""))
@@ -357,22 +388,22 @@ def main():
             if extent == "partial":
                 if len(homes) < 2 or not ht or len(ht) == len(homes):
                     print(f"  FAIL  {sid} is partly bold in the PDF but the tracker does not split it: {homes}")
-                    fail += 1
+                    fails["B"] += 1
                 else:
                     print(f"  SPLIT {sid}  core -> {[h for h, t in homes if not t]}   HT -> {ht}")
             elif extent == "all" and not all(t for _, t in homes):
                 print(f"  FAIL  {sid} is wholly Higher Tier in the PDF, tracker says otherwise: {homes}")
-                fail += 1
+                fails["B"] += 1
             elif extent == "none" and ht:
                 print(f"  FAIL  {sid} is not bold in the PDF, tracker flags Higher Tier: {homes}")
-                fail += 1
+                fails["B"] += 1
 
     print("\n== C. Coverage — is each written statement covered IN FULL, unioned across files ==")
     incomplete = []
     for sid in sorted(quotes, key=order):
         if sid not in pdf:
             print(f"  FAIL  {sid} quoted in {quotes[sid][0][0]} but not found in the PDF")
-            fail += 1
+            fails["C"] += 1
             continue
         miss = uncovered(pdf[sid][0], quotes[sid])
         if miss:
@@ -383,7 +414,7 @@ def main():
         print(f"        allocated to: {[h for h, _ in alloc.get(sid, [])]}")
     if not incomplete:
         print(f"  PASS  all {len(quotes)} written statements covered in full")
-    fail += len(incomplete)
+    fails["C"] += len(incomplete)
 
     print("\n== D. Not yet written (informational — expected until the last wave) ==")
     todo = sorted(set(alloc) - set(quotes) - wl, key=order)
@@ -394,12 +425,25 @@ def main():
     # been written, but quoted nowhere, is a hole in delivered work — not backlog.
     if part:
         print(f"  FAIL  {len(part)} sit in a subtopic already written but are quoted nowhere: {part}")
-        fail += len(part)
+        fails["D"] += len(part)
     else:
         print("  PASS  every statement allocated to an already-written subtopic is written")
 
-    print(f"\n{'GATE FAILED' if fail else 'GATE PASSED'}")
-    return 1 if fail else 0
+    # F145: the exit code answers for ONE half; the other half is informational
+    # here because it has its own gate at the other stage. A conflated verdict
+    # meant known setup-time debt printed GATE FAILED forever at publish, which
+    # teaches the orchestrator to read past the verdict.
+    setup, publish = fails["A"] + fails["B"], fails["C"] + fails["D"]
+    gated, other = (publish, setup) if stage == "publish" else (setup, publish)
+    gated_name, other_name, other_home = (
+        ("publish half C/D", "setup half A/B", "/hero-0-setup")
+        if stage == "publish" else
+        ("setup half A/B", "publish half C/D", "/hero-4-publish"))
+    verdict = f"GATE {'FAILED' if gated else 'PASSED'} ({gated_name}: {gated} failure(s))"
+    if other:
+        verdict += f" — NOTE: {other_name} carries {other} failure(s), informational at this stage, gated at {other_home}"
+    print(f"\n{verdict}")
+    return 1 if gated else 0
 
 
 if __name__ == "__main__":

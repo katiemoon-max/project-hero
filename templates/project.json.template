@@ -31,7 +31,8 @@
     "prompts": "prompts",
     "scripts": "scripts",
     "knowledge_files": "knowledge-files",
-    "research": "research"
+    "research": "research",
+    "findings_log": "<path to the course's running F-series findings log, where the course keeps one; null where findings go straight to the pack ledger. Numbering comes from next_finding_number below, never from 'the next free number in this file' (F145 part 3)>"
   },
   "structure": {
     "ratified": "<YYYY-MM-DD the user ratified the structure at /hero-0-setup §2 (the Cobalt-tree/tracker diff where a tracker exists, the Cobalt tree alone otherwise) — null means DO NOT BUILD>",
@@ -63,11 +64,12 @@
     ],
     "content_limitations": [
       {
-        "_comment": "F65 — the OTHER channel of corpus doubt: not 'which files are unusable' (known_casualties) but 'which KINDS of content are unreliable in every file'. Stage 0 once recorded exactly such a limitation (figure-internal text absent from converted markdown) in a free-text field nothing reads, and it shipped a defect five stages later. Every entry here is READ by R2/R3/WRITER/CHECKER alongside known_casualties, and /hero-4-publish BLOCKS while an entry has no mitigation recorded in the wave-state file.",
+        "_comment": "F65 — the OTHER channel of corpus doubt: not 'which files are unusable' (known_casualties) but 'which KINDS of content are unreliable in every file'. Stage 0 once recorded exactly such a limitation (figure-internal text absent from converted markdown) in a free-text field nothing reads, and it shipped a defect five stages later. Every entry here is READ by R2/R3/WRITER/CHECKER alongside known_casualties, and /hero-4-publish BLOCKS while an entry has no mitigation recorded in the wave-state file. The `ruling` field is a POINTER, not prose (F147 — F65's failure mode one level up): gate 6 mechanically resolves the cited id in the wave-state file and BLOCKS on a citation that does not exist there. On 1PH0 a limitation cited 'W-55', which resolved to an unrelated tier ruling while the real mitigation existed under another number — a record-only check passes both cases identically.",
         "class": "<e.g. 'text rendered inside figures'>",
         "consequence": "<e.g. 'absent from converted markdown with no gap left behind'>",
         "applies_to": "<e.g. 'all question papers'>",
-        "mandatory_action": "<e.g. 'check research/corpus/pdf-second-engine/ before any absence claim'>"
+        "mandatory_action": "<e.g. 'check research/corpus/pdf-second-engine/ before any absence claim'>",
+        "ruling": "<the wave-state ruling id that mitigates this on the current wave — resolved by gate 6 (F147); null until the wave records one>"
       },
       {
         "_comment": "F62 widened to mark schemes (2026-08-10): reading-order/row scrambles were scoped to QPs in the original class, and MS-side instances recurred all wave. Ships in the template so no course rediscovers it.",
@@ -128,6 +130,8 @@
     "upload_hold": "no upload until the user approves the wave sample"
   },
   "pack_commit": "<the project-hero pack commit this project was set up from (F76) — the defined baseline for the /hero-2-write pack-freshness diff: a project file that differs from the pack at this commit and carries no PACK PROVENANCE header is a stale copy, not a customisation. Update on every deliberate pack refresh of the project>",
+  "next_finding_number": null,
+  "_next_finding_number_note": "The F-series allocator (F145 part 3): 'the next free number' is a fact about the union of every log, wave-state file and broadcast that no artefact holds — on 1PH0 three sessions in one day each took the next number from where they were standing and triple-allocated F144–F146, one collision already broadcast to fourteen agents before it was caught. Set to the first free number at setup; every new finding takes THIS number and increments the field IN THE SAME EDIT that writes the finding, whichever log it lands in.",
   "wave_size": "~15 subtopics (max 19)",
   "concurrency_cap": 20,
   "status": {

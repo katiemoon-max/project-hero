@@ -41,6 +41,16 @@ REPORT checks (listed for orchestrator/fixer attention, not auto-failed):
   - Unbounded quantifiers (F120): "every ... scheme" / "every Paper" without an
     enumerated list in the same block -- a true observation inflated over a set
     the note cannot have checked. Verify or re-scope each hit
+  - Worked-example provenance (F150): every block opened by a "**Worked
+    Example" label must carry a paper reference INSIDE that block (Qn / Paper n
+    / sitting). Scoped from the label line to the next heading or next label,
+    NEVER a fixed line window -- a window-scoped detector counted neighbouring
+    prose's references and cleared an invented example it had not checked (the
+    1PH0 ledger's "6 of 6 cite a paper" was really 2 of 6). 4 of 6 examples on
+    the exposing wave had no reference at all; one was an rn.md import no
+    student ever sat (F148). Reported, not auto-failed: the CHECKER blocks
+    these (bare unattributed worked examples are BLOCKERS since F148/F150) --
+    this sweep is the mechanical safety net at publish
 
 Usage:
   python preflight_sweep.py <file-or-dir> [more...] [--cobalt] [--skills-label "Mathematical skills"]
@@ -60,6 +70,14 @@ CLAIM_RE = re.compile(r"lost in conversion|did not survive conversion|not recove
                       r"|cannot render|is not installed|physically unavailable"
                       r"|this environment cannot", re.IGNORECASE)
 QUANTIFIER_RE = re.compile(r"\bevery (?:one of )?(?:the )?(?:mark )?scheme|\bevery Paper", re.IGNORECASE)
+WE_LABEL_RE = re.compile(r"\*\*Worked Example")
+PAPER_REF_RE = re.compile(
+    r"\bQ\d+|\bPaper \d"
+    r"|\b(?:19|20)\d\d\b.{0,40}?(?:January|February|March|April|May|June|July"
+    r"|August|September|October|November|December)"
+    r"|(?:January|February|March|April|May|June|July|August|September"
+    r"|October|November|December)\b.{0,40}?\b(?:19|20)\d\d",
+    re.IGNORECASE | re.DOTALL)
 
 
 CLAUSE_OPENERS = ("which", "who", "where", "so", "but", "because", "though",
@@ -139,6 +157,23 @@ def sweep_file(path: Path, cobalt_mode: bool, skills_marker: str):
         for m in QUANTIFIER_RE.finditer(line):
             reports.append(f"L{i} unbounded quantifier (F120 -- verify against an enumerated "
                            f"list or re-scope): ...{line[max(0, m.start() - 30):m.end() + 40].strip()}...")
+
+    # F150: worked-example provenance, scoped per example BLOCK (label line to
+    # the next heading or next label) -- never a fixed line window, which
+    # counts neighbouring prose's references and clears unchecked content
+    lines = text.splitlines()
+    label_idx = [i for i, ln in enumerate(lines) if WE_LABEL_RE.search(ln)]
+    for n, i in enumerate(label_idx):
+        end = len(lines)
+        for j in range(i + 1, len(lines)):
+            if re.match(r"^#{1,6}\s", lines[j]) or WE_LABEL_RE.search(lines[j]):
+                end = j
+                break
+        block = "\n".join(lines[i:end])
+        if not PAPER_REF_RE.search(block):
+            reports.append(f"L{i + 1} worked example with NO paper reference in its block "
+                           f"(F150 -- rebuild from a named scheme or delete; never retrofit "
+                           f"an attribution): {lines[i].strip()[:100]}")
 
     sp = len(re.findall(r"^## Spec Point:", text, re.M))
     kt = text.count("**Key terminology:**")
