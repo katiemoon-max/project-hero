@@ -111,6 +111,16 @@ def sweep_file(path):
 
 
 def main():
+    # cp1252 consoles crash on source glyphs (pi, mu, U+2212...) inside the
+    # quoted sentences this script PRINTS -- reconfigure rather than requiring
+    # PYTHONIOENCODING (same guard as spec_coverage_gate/fixer_diff_sweep;
+    # caught on the first real run, an IAL master carrying a pi)
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
     files = []
     for a in sys.argv[1:]:
         p = Path(a)
