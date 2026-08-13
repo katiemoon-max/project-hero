@@ -642,6 +642,28 @@ it exists to eliminate. F148 was a purpose violation, not just a prompt bug.
   notebook source RENAMED "SUPERSEDED — DO NOT CITE", never deleted (existing pack convention).
 - [x] **WPH16 Jan 2022 "½a" board misprint:** the in-file caution beside each quote SUFFICES;
   reporting to Pearson is optional and not required for any pipeline purpose.
+- [ ] **Chunk-count reconciliation is a ONE-SIDED test, not an equality (found 13 Aug, IAL fast-pass
+  re-issue).** Re-issuing 19 live docs, the upload check "created + updated + unchanged == the
+  manifest's recorded chunk total" fired a FAIL on `The de Broglie Equation` at 33 vs 32. It was a
+  false alarm: the approved fix replaced a short bullet with one roughly three times longer, which
+  legitimately re-chunked the section. Truncation LOSES tail chunks and drives the total DOWN; a
+  total at or slightly ABOVE the recorded figure is content growth. **The correct rule: a decrease
+  is a blocker, an increase is expected whenever the edit added text — and the tail read-back, not
+  the count, is the real anti-truncation evidence.** Also note the recorded figure goes stale the
+  moment a doc is re-issued (this course's counts predated the 3 Aug ecf retrofit), so the manifest
+  must be rewritten FROM each re-issue's actual response (F73's rule, applied to updates as well as
+  creates). Worth encoding in hero-4 step 9 before the next course re-issues anything.
+- [ ] **A consolidation parser blind to a formatting variant under-read its own inputs by 21%
+  (found 13 Aug, IAL Phase 2 consolidation).** Twelve agent reports were merged by matching verdict
+  strings exactly; two reports wrote `**CONTRADICTED**` in bold and three mixed both forms, so the
+  parser silently dropped 35 of 168 claims — including two entire batches — and printed a confident
+  total. Nothing in the output said "batch 08 missing"; it just reported a smaller number. Caught
+  only by reconciling per-batch counts against the agents' own stated totals (14 each). **Rule: any
+  merge across agent-authored artefacts must strip markdown emphasis before matching AND reconcile
+  a per-source count against what each source claimed — an aggregate with no denominator check is
+  the same defect class as F144/F147 (a check that tests presence, not content).** Same family as
+  the vault's standing "count, don't trust progress notes" and "patterns prove presence, not
+  absence" rules.
 - [x] **IAL Phase 1 calibration COMPLETE 13 Aug** (verdict: vault
   `Feedback/IAL-F148-shortlists/phase1-verdict-2026-08-13.md`). 59 of 61 sampled claims
   adjudicated (2 NO PACK — Force & Acceleration): 41% supported, 49% split (quantifier only),
