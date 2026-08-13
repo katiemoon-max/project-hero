@@ -21,12 +21,12 @@ Calibration result: roughly a 3× cost reduction at equal output quality versus 
 | Skills entry per SP | `skills-map.json` (`paths.skills_map` — direct spec read at stage 0) |
 | Cobalt commentary per SP | `paths.cobalt_content` (extracted at stage 0; null only by dated ruling) |
 | Legacy vault note file(s) per SP | adopted-vault courses only: `sp-mapping.json` `mapping` (`vault_file` per `cobalt_sp_id`) |
-| Cobalt RN content | `searchRevisionNotes(subtopic_id)` → `findRevisionNote` — save to research folder; flag any `$c{` commentary blocks (they carry examiner-style guidance to fold in) |
+| Cobalt RN content | `searchRevisionNotes(subtopic_id)` → `findRevisionNote` — **stage-0 coverage-parity report ONLY (13 Aug 2026 ruling; pack `README.md` "Purpose & source policy")**: never saved to a research folder, never passed to any agent. Its `$c{` commentary blocks are extracted separately at stage 0 (`paths.cobalt_content`) — that extraction, not the RN, is the commentary channel |
 | Board conventions | One extraction per course (`prompts/BOARD-CONVENTIONS.md`, run as the CLOSING act of wave 1's `/hero-1-research` → `paths.board_conventions` — F29/F31; `/hero-2-write` asserts the path and refuses on null): command words from the spec's own taxonomy appendix, marking-grid conventions from the Additional-guidance column, traps from ERs. Reused every slice, never re-derived |
 | Tier flags | `sp-mapping.json` per-SP `true \| false \| "partial"` + note (F50/F56) — passed to writers as HIGHER_TIER_ONLY; tier is never inferred from paper appearances or the converted spec |
 | Exemplars | `project.json` → `exemplars` + the project README's template rules block |
 
-Working files: `research/<unit-key>/<Subtopic>/` — `rn.md` (coverage/register reference only, never a content source — F148), `vault-digest.md`, `ms-extracts.md`, `nlm-check.md`. Kept as grounding evidence for proofing.
+Working files: `research/<unit-key>/<Subtopic>/` — `vault-digest.md`, `ms-extracts.md`, `nlm-check.md`. Kept as grounding evidence for proofing. (No `rn.md` — removed from packs by the 13 Aug 2026 source-policy ruling, F148; a pack containing one is a legacy wave.)
 
 ## Stage R — research
 

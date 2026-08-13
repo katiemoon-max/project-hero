@@ -558,7 +558,7 @@ rounds: an existing project's `prompts/`/`scripts/` copies must be refreshed del
   for not covering them)** → Leander's measured fix adopted verbatim into `written_quotes()`:
   id-less `>` continuation lines append to the statement above; `cur` reset outside blocks.
   Unit-tested here (enumerated items retained, id-carrying continuations still split, reset works).
-  His measurement on the whole 1PH0 corpus: exactly one result moves (3.5 FAIL → covered).
+  Her measurement on the whole 1PH0 corpus: exactly one result moves (3.5 FAIL → covered).
   **Worth sweeping other courses: any shipped wave quoting an enumerated statement passed check C
   only because the items were invisible to it — 4PH1 should re-run the gate at this commit.**
 - [x] **F145 (part 5) (exit code conflates setup-time and publish-blocking halves)** → `--stage
@@ -587,3 +587,33 @@ rounds: an existing project's `prompts/`/`scripts/` copies must be refreshed del
   content came from. Six green gates were silent on the only question that mattered.
 - The 1PH0 ledger's method note, now encoded in two scripts: **a provenance detector measured over a
   line window will clear content it has not actually checked.** Scope to the semantic block.
+
+## Ruling — purpose & source policy ratified (2026-08-13 meeting, Katie + Leander)
+
+The F148 meeting ratified the project's purpose statement and it now lives as the pack `README.md`
+"Purpose & source policy" section — **the single home; every stage prompt cites it, none restates
+it.** In one line: Project Hero builds a per-course source of truth grounded in official exam board
+documents plus the commentary on our own exam questions ONLY (attributed teacher/examiner expertise,
+never evidence); published SME resources (RNs, EQs, flashcards, articles) are NEVER sources, because
+the pipeline exists to produce and audit them, and feeding them back in recirculates the very errors
+it exists to eliminate. F148 was a purpose violation, not just a prompt bug.
+
+- [x] **`rn.md` removed from research packs entirely (supersedes F148's bounded role; F88 re-scoped).**
+  Katie's ruling of the three options: *stage-0 parity report only*. `findRevisionNote` is still
+  called at `/hero-0-setup` §6.6 on RN-bearing courses, but solely to write a human-read
+  `research/reference/rn-parity-report.md` (RN coverage vs spec allocation — what the new files
+  replace); path recorded as `paths.rn_parity_report` (template updated; the old per-project
+  `paths.rn_source` convention is superseded). No `rn.md` is written into a wave's research
+  directories and no agent receives RN content; WRITER.md and CHECKER.md now treat a stray `rn.md`
+  in an evidence pack as a setup defect. Edited: README.md (new policy section), WRITER.md item 3 +
+  the manufactured-certainty ban (now "SME-derived marking claims"), CHECKER.md ground-truth
+  preamble, WRITER-SLICE.md provisioning table + working-files line, hero-0 §6.6 (pack + vault
+  copies), project.json.template.
+- [x] **Commentary's status made explicit:** the `$c{}` per-question extraction (`paths.cobalt_content`)
+  is the ONE sanctioned SME input — classed as attributed expertise in the policy table; it never
+  overrides board evidence and a marking claim it makes still needs a quoted scheme before a file
+  may assert it (WRITER.md item 3 wording).
+- [ ] **Existing courses carry the old convention:** 1PH0 and 4PH1 project copies of prompts/ and
+  their `paths.rn_source` entries predate this ruling — refresh deliberately (the standing re-pull
+  caveat) and convert the rn_source entry to `rn_parity_report` at next touch. Waves already
+  written under the old role are covered by the F148 sweep decisions, not this entry.

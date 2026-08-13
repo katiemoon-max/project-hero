@@ -4,7 +4,21 @@ A course- and subject-agnostic pipeline for building **exam-course knowledge fil
 
 Everything course-specific lives in one config file (`project.json`), created at stage 0 and read by every later stage. The skills, stage prompts and scripts never need editing per course — they have run unchanged across sciences pilots and are designed to work for any board, qualification or subject (sciences, humanities, languages).
 
-## The lifecycle
+## Purpose & source policy (ratified 13 August 2026 — this section is the single home; stage prompts cite it, never restate it)
+
+**Project Hero exists to build a source of truth for each course, grounded in official exam board documents, plus the commentary on our own exam questions as an additional source of teacher/examiner expertise — and nothing else.** That source of truth is then used to produce and review Save My Exams resources with authority and confidence in their quality. The direction only ever flows one way: Project Hero sits *upstream* of everything SME publishes. Any published SME resource fed back in as a source creates a circular loop in which the errors this pipeline exists to eliminate validate themselves — which is why the F148 defect (a revision note named "the content backbone") was a purpose violation, not just a prompt bug.
+
+Every input the pipeline touches falls in one of these classes:
+
+| Class | Examples | Standing |
+|---|---|---|
+| **Board documents** | Specification, question papers, mark schemes, examiner reports, formula booklet, taxonomy appendices | **Evidence.** The only ground for any factual, marking, frequency or tier claim. The backbone of every knowledge file is `ms-extracts.md` + the examiner-report evidence |
+| **SME exam-question commentary** | The `$c{}` commentary blocks extracted at stage 0 | **Attributed expertise.** Folded into tips/strategy, contextualised — but it never overrides board evidence, and any claim it makes about marking still needs a scheme behind it before a file may assert it |
+| **Cobalt course metadata** | `getCourseStructure` tree, spec-point names and definitions, tracker CSV | **Structural scaffolding**, ratified by the human at stage 0. Shapes what the files cover; never supplies their content |
+| **SME published resources** | Revision notes, exam questions, flashcards, articles — anything on the site | **Never sources.** These are the resources the pipeline exists to produce and audit; using them as input recirculates their errors with our own authority stamped on top. The revision note's sole remaining role is the stage-0 coverage-parity report (below) — it is never passed to a research, writer, checker or fixer agent |
+| **Pipeline outputs** | Approved exemplars, other courses' masters | **Register and voice reference only**, never content — each exemplar's header says so |
+
+**The revision-note ruling (13 Aug 2026, supersedes the bounded role F148 left in place):** on RN-bearing courses, stage 0 still fetches each subtopic's revision note via `findRevisionNote`, but solely to produce a human-read **coverage-parity report** — what the RN taught against what the specification allocates — so the course owner can see what the new files replace. No `rn.md` enters a research directory or an agent's evidence pack. Courses without revision notes record the usual dated null ruling (F88).
 
 One numbered pipeline, five stages. `/hero` re-orients you at any point.
 
