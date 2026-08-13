@@ -642,6 +642,12 @@ it exists to eliminate. F148 was a purpose violation, not just a prompt bug.
   notebook source RENAMED "SUPERSEDED — DO NOT CITE", never deleted (existing pack convention).
 - [x] **WPH16 Jan 2022 "½a" board misprint:** the in-file caution beside each quote SUFFICES;
   reporting to Pearson is optional and not required for any pipeline purpose.
-- [ ] **IAL Phase 1 calibration launched 13 Aug** (random-20 of the 188, 15 of the 1,033
-  near-reference set, plus the 35 ecf/cap/never-always severity claims) — results gate Phase 2
-  per the assessment; no live doc touched before Katie's hold approval.
+- [x] **IAL Phase 1 calibration COMPLETE 13 Aug** (verdict: vault
+  `Feedback/IAL-F148-shortlists/phase1-verdict-2026-08-13.md`). 59 of 61 sampled claims
+  adjudicated (2 NO PACK — Force & Acceleration): 41% supported, 49% split (quantifier only),
+  10% serious. Population rate for the 188 ≈ 80% need a re-scope, 25% serious; the 1,033
+  near-reference probe came back 12/15 clean with ZERO serious — **the 6× scenario is dead,
+  Phase 2 proceeds at the ~115-file scale**. Every ecf claim was directionally right. Method
+  caveat for Phase 2/3: the shortlist keys files by BASENAME and units 3/6 share
+  practical-skills names — 9 of 16 "unit6" sample rows were really unit3; key every edit on
+  unit/file. Fast-pass re-issue awaits Katie's review of the prescribed replacements + hold.
