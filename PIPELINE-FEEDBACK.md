@@ -332,19 +332,19 @@ copies must be refreshed deliberately.
 
 ### Open — needs Katie's decision or a build
 
-- [ ] **F77** — Leander's judgement call: `convert_qp_second_engine.py` left un-refreshed to preserve
-  the provenance of a finished corpus. **Recommend: accept the deviation** (the artefact and its
-  producer should agree) and formalise via the now-conventional `PACK PROVENANCE` header — needs
-  Katie's word to Leander either way
+- [x] **F77** — RULED 13 Aug 2026 (Katie): deviation ACCEPTED — `convert_qp_second_engine.py` stays
+  un-refreshed on the finished corpus (the artefact and its producer should agree), formalised via
+  the `PACK PROVENANCE` header. Word passed to Leander in the 13 Aug rulings note
 - [ ] **F81** — cross-file distribution sweep (histogram of shape-bearing features across a wave, no
   pass/fail; the only structural detector for 100%-consistent defects like F70's 227/227). Small
   build; complements the hero-3 step 7 claims sweep
 - [ ] **F84 (script half)** — `fixer_diff_sweep.py`: flag fixer-added lines carrying `=` between two
   evaluable numeric expressions, report-only
-- [ ] **F96** — duplicate-SP detection: run the match test on the STATEMENT (record match class:
-  identical/superset/fragment/body-only; only identical auto-admits), add a third category
-  `statement_family` (general statement + context-bound instances — write every instance), state
-  "a superset is never a duplicate of its subset". Design decision on the sp-mapping shape — Katie
+- [x] **F96** — RULED 13 Aug 2026 (Katie): Leander's design adopted as specced — match test on the
+  STATEMENT with recorded match class (identical/superset/fragment/body-only; only identical
+  auto-admits), third category `statement_family` (general statement + context-bound instances —
+  write every instance), "a superset is never a duplicate of its subset". Now in hero-0 §2.4's
+  duplicate-SP bullet
 - [ ] **F97 (stage-0 half)** — PUA normalisation in the converter (strip `0xF000`, read remainder as
   Adobe Symbol, `[?U+XXXX]` for unmapped, skip Wingdings) — the ONLY workable remedy (re-conversion
   and cross-engine comparison both read the same lying CMap). **Plus: sweep every OTHER Pearson-PDF
@@ -366,9 +366,11 @@ copies must be refreshed deliberately.
 - [ ] **F117 (gate half)** — a script comparing each `## Spec Point:` statement quotation against the
   spec PDF text, exact-match after whitespace normalisation (statement numbers known, one file;
   sections 6/10/13 will hit the corrupted compounds still sitting in 1PH0's converted spec)
-- [ ] **F122(2)** — star/bold adjacent-incompatibility (`**…Q9(c)***` — closing bold eats the star).
-  Detection now ships in both starred-ref scripts; the CONVENTION (star outside the bold vs bolded
-  citations drop the star) is Katie's call, then one line in WRITER/CHECKER
+- [x] **F122(2)** — RULED 13 Aug 2026 (Katie): **star OUTSIDE the bold** — `**…Q9(c)***` (bold text +
+  unbolded trailing star) is the accepted convention; a dropped star is data loss, an unbolded star
+  is presentation. Never drop, never escape. One line now in WRITER (citations rule) and CHECKER
+  (item 13: flag only dropped/escaped stars, never the unbolded rendering); the scripts' detection
+  stands as a report, not a fail
 
 ## Corpus conversion — CPU cost and remote offload (2026-08-11, Edexcel IGCSE + GCSE Physics)
 
@@ -617,3 +619,29 @@ it exists to eliminate. F148 was a purpose violation, not just a prompt bug.
   their `paths.rn_source` entries predate this ruling — refresh deliberately (the standing re-pull
   caveat) and convert the rn_source entry to `rn_parity_report` at next touch. Waves already
   written under the old role are covered by the F148 sweep decisions, not this entry.
+
+## Rulings batch — 2026-08-13 afternoon (Katie, following the recommendations run-through)
+
+- [x] **Frequency standard (the cross-course ruling the IAL assessment asked for):** SPLIT BY CLAIM
+  TYPE. Topic/format-appearance frequency → counted against the R1 appearance table, count must
+  support the word. Marking-behaviour frequency ("the first mark is usually…") → NEVER assertable
+  from a variety-selected extract, in either direction; always re-scoped to named sittings. Applies
+  to IAL, 1PH0, 4PH1 and every future course. Encoded: WRITER manufactured-certainty list, CHECKER
+  item 16, TOPUP-REVERIFY Task C step 4.
+- [x] **`rn_derived_sweep.py` wired into `/hero-3-check` wave entry** as an EXTRA_CHECKS shortlist
+  feed (hero-4 gate 2 stays as backstop) — catching the F149 class while the checker holds the
+  evidence, not after stage 3 has closed. Reconcile with Leander's 1PH0 implementation when
+  upstreamed, before it is trusted in two stages.
+- [x] **A-level exemplar (`Edexcel IAL - Force & Acceleration.md`):** KEPT as the register anchor;
+  marking claims re-scoped to the hedged forms; provenance header extended (hand-authored 24 Jul
+  pilot, predates the research pipeline, register/depth model only — never a content or claims
+  model). See the exemplar's header for the edit record.
+- [x] **1PH0 course-side rulings (Katie's calls, passed to Leander in the 13 Aug note):** "inertial
+  mass" DROPPED from `Newton's Second Law`'s Key-terminology block (W-2 gave the definition to
+  `Mass & Inertia`, 2.22 HT — a file that does not teach the term does not flag it); superseded
+  notebook source RENAMED "SUPERSEDED — DO NOT CITE", never deleted (existing pack convention).
+- [x] **WPH16 Jan 2022 "½a" board misprint:** the in-file caution beside each quote SUFFICES;
+  reporting to Pearson is optional and not required for any pipeline purpose.
+- [ ] **IAL Phase 1 calibration launched 13 Aug** (random-20 of the 188, 15 of the 1,033
+  near-reference set, plus the 35 ecf/cap/never-always severity claims) — results gate Phase 2
+  per the assessment; no live doc touched before Katie's hold approval.

@@ -7,7 +7,15 @@ so its STRUCTURE may be imitated as well as its register — with two caveats:
 (1) it predates the F40 heading ruling, so it uses the retired
 "### How <SP> Appears in Exams" form; new files use "### <SP name> — In the Exam";
 (2) the course's own ratified exam skeleton and the project README's template
-rules always take precedence over anything in this file. -->
+rules always take precedence over anything in this file;
+(3) PROVENANCE (recorded 13 Aug 2026): this file is the hand-authored "enriched
+v2 pilot" of 24 Jul 2026 — it predates the research pipeline, has no research
+pack behind it, and never passed the adversarial checker gate. It is a REGISTER
+AND DEPTH model only, never a content or claims model. Its unsupported marking
+claims were re-scoped to the ruled hedged forms on 13 Aug 2026 (Katie's ruling,
+IAL exposure assessment decision 5); do not imitate any residual sentence that
+promises or denies marks — the current WRITER.md manufactured-certainty rules
+outrank this file everywhere. -->
 
 ---
 section: 1. Mechanics & Materials
@@ -135,7 +143,7 @@ This idea — a moving equilibrium that re-establishes itself — is developed f
 
 ### How Newton's First Law Appears in Exams
 
-Mostly Section B **state** and **explain** questions (1–6 marks, sometimes levelled), requiring you to reason that a body at rest or moving at constant velocity has zero resultant force (and, for a rigid body, zero resultant moment). Occasional Section A multiple-choice questions test the force balance directly.
+This law is examined through Section B **state** and **explain** questions (1–6 marks, sometimes levelled), requiring you to reason that a body at rest or moving at constant velocity has zero resultant force (and, for a rigid body, zero resultant moment). It also appears in Section A multiple-choice questions testing the force balance directly.
 
 #### Multiple Choice (Section A)
 
@@ -843,7 +851,7 @@ Deliver the chain link by link for the object in the question, closing the loop 
 #### Exam Strategy for Terminal Velocity
 
 > [!tip] Your First Decision: Which Force Balance?
-> Almost every terminal-velocity mark — explain or calculate — depends on choosing the right force balance, so make it your first written line. Ask two questions: **which way is the object moving**, and **is it in air or in a liquid**? Then match the situation:
+> The force balance is the foundation of terminal-velocity questions, explain and calculate alike, so make it your first written line. Ask two questions: **which way is the object moving**, and **is it in air or in a liquid**? Then match the situation:
 > - Falling through air (raindrop, skydiver): weight = drag
 > - Falling through a liquid (sphere in oil, sinking object): weight = drag + upthrust
 > - Driven through a fluid (boat, car, towed sphere): driving force = drag
@@ -854,9 +862,9 @@ Deliver the chain link by link for the object in the question, closing the loop 
 > [!tip] For Explain Questions: the Chain, the Graph, the Loop
 > **The chain** — give the causal links in order, one per sentence: resultant force acts → the object accelerates → drag increases with velocity → the resultant force decreases → the acceleration decreases → the forces balance → the acceleration is zero → the velocity is constant.
 >
-> **The graph** — if the question prints a graph, tie each link to a named feature of it ("the gradient decreases", "the line becomes straight"). An answer that never mentions the graph caps at 1 mark.
+> **The graph** — if the question prints a graph, tie each link to a named feature of it ("the gradient decreases", "the line becomes straight"). An answer that never mentions the graph is not answering the question that was asked.
 >
-> **The loop** — always finish with the closing sentence: "the resultant force is zero, so the acceleration is zero, so the velocity is constant and maximum — the terminal velocity". This final link is routinely a separate mark, and it is the one most candidates leave out.
+> **The loop** — always finish with the closing sentence: "the resultant force is zero, so the acceleration is zero, so the velocity is constant and maximum — the terminal velocity". This closing link is the easiest one to leave out, so write it deliberately.
 >
 > If the context is unfamiliar — a rising lift bag, a fireboat, a sphere pulled sideways through oil — keep the chain but swap in the forces from your balance. The reasoning transfers; a memorised skydiver paragraph does not.
 
@@ -866,12 +874,12 @@ Deliver the chain link by link for the object in the question, closing the loop 
 > 3. Substitute the drag law the question supplies — Stokes' law *F* = 6*πηrv*, or a given formula such as *D* = *kv*²
 > 4. Rearrange for the unknown and give the answer with its unit
 >
-> If the question gives a volume but the drag law needs a radius, extract it from *V* = 4/3 *πr*³ first. And in a liquid, upthrust is never optional — the early marks are for including it in the balance.
+> If the question gives a volume but the drag law needs a radius, extract it from *V* = 4/3 *πr*³ first. And for a body falling or rising through a liquid, the balance is incomplete without upthrust — leaving it out invalidates every line that follows.
 
 > [!warning] Errors That Cost Marks
 > - Stopping the chain at "forces balance" without stating zero acceleration and constant velocity
 > - Answering a graph question without referring to the graph
-> - Dropping upthrust from the balance for motion through a liquid
+> - Dropping upthrust from the balance for a body falling or rising through a liquid
 > - Confusing drag (speed-dependent) with upthrust (constant)
 > - Reciting the falling-skydiver explanation for an object that is rising or driven — the balance is different
 > - In the practical, starting the timing at the surface, before terminal velocity has been reached

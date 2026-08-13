@@ -82,6 +82,11 @@ roll-ups ("N sittings", "almost every", "the most common", "only", "always"):
    a sitting already counted is not a further sitting.
 3. Re-read every roll-up sentence against its finished list (F34): the words must
    be supported by the count you just made. Six of nineteen is not "almost every".
+4. Apply the split frequency standard (RULED 13 Aug 2026): a frequency word about
+   topic/format APPEARANCE is checkable against the appearance record — check it;
+   a frequency word about MARKING BEHAVIOUR ("usually the first mark", "routinely
+   accepted") is unassertable from a variety-selected extract in either direction —
+   the correction is always a re-scope to named sittings, never a bigger count.
 
 ## Corrections and output
 
