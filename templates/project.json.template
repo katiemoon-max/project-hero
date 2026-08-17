@@ -59,7 +59,7 @@
       "table_gate_notes": "<date of the last passing run + mark-scheme count checked; from conversion-report.json at the corpus root. 'Passing' now means table + legibility (F32) + spec bold (F44) gates together. status may not be 'complete' while this is false>",
       "notes": "<repair passes owed, sittings still outstanding>"
     },
-    "second_engine_pass": "<F64 — where the benchmark shows neither engine dominates a doc type (typical for question papers: docling loses figure-internal text), record the second-engine extraction here: script, output dir (a PARALLEL tree, e.g. research/corpus/pdf-second-engine/, so nothing globbing *.md sees two files per paper), the measurements, and when consulting it is mandatory. The second extraction is EVIDENCE for absence-claims, never the citable corpus>",
+    "second_engine_pass": "<F64 — where the benchmark shows neither engine dominates a doc type (typical for question papers: docling loses figure-internal text), record the second-engine extraction here: script, output dir (a PARALLEL tree, e.g. research/corpus/pdf-second-engine/, so nothing globbing *.md sees two files per paper), the measurements, and when consulting it is mandatory. The second extraction is EVIDENCE for absence-claims, never the citable corpus. STATE ITS DOC-TYPE SCOPE explicitly (17 Aug 2026): 1PH0's second tree held question papers only — 21 files, no mark schemes, no examiner reports — so a content_limitations mandatory_action reading 'check the second engine before any absence claim' was UNPERFORMABLE for every mark-scheme-located claim (most format-absence claims); any mandatory_action citing this tree must name a performable route (the source PDF) for doc types the tree does not hold. And NEITHER conversion tree is a superset of the other (1PH0: the primary drops ~8% of QP pages; the second engine independently dropped a question the primary retained) — an absence claim needs both trees AND the PDF, never either alone>",
     "known_casualties": [
       "<unusable FILES — never cite. Local corpus: file paths (mojibake, lost tables, glyph-index legibility failures from conversion-report.json — record those WITH the reason, F32). Notebook corpus: source titles (missing/duplicate sources, or variants such as 'Revised Mark Scheme' replacing 'Mark Scheme'). Keep this list current as waves discover more>"
     ],
@@ -75,9 +75,17 @@
       {
         "_comment": "F62 widened to mark schemes (2026-08-10): reading-order/row scrambles were scoped to QPs in the original class, and MS-side instances recurred all wave. Ships in the template so no course rediscovers it.",
         "class": "mark-scheme partial row loss",
-        "consequence": "single marking-point rows or cells dropped/merged while the table still parses — the pipe-count gate passes (10+ verified instances in one 4PH1 wave)",
+        "consequence": "single marking-point rows or cells dropped/merged while the table still parses — the pipe-count gate passes (10+ verified instances in one 4PH1 wave; first confirmed GUIDANCE-row loss 17 Aug 2026, 1PH0 2022 June 1F, on a course whose project.json recorded zero casualties). A dropped MS row leaves NO GAP BEHIND, so nothing sweeps for it and a zero-casualty record is not evidence of zero loss — the only recovery route is the source PDF",
         "applies_to": "all mark schemes",
-        "mandatory_action": "run scripts/ms_row_coverage.py after conversion; where a question's MS mark tally falls short of the QP's 'Total for Question N', verify against the source PDF before quoting the scheme as complete or asserting a marking point is absent"
+        "mandatory_action": "run scripts/ms_row_coverage.py after conversion; where a question's MS mark tally falls short of the QP's 'Total for Question N', verify against the source PDF before quoting the scheme as complete or asserting a marking point is absent. Note the tally check cannot see a dropped GUIDANCE row (guidance carries no marks) — before asserting a scheme carries no guidance/ecf/alternative note, open the PDF"
+      },
+      {
+        "_comment": "F156 (17 Aug 2026) — the OCR limitation fires on the CATEGORY (this content class), not on a visible symptom: OCR of candidate handwriting reads as ordinary text with no marker, so a rule applied to it is applied correctly to text that was never the board's. On 1PH0 a writer quoted OCR'd handwriting as board text and taught 'two spelling slips cost nothing' from misspellings no candidate wrote. Ships in the template so no course rediscovers it.",
+        "class": "candidate-exemplar scripts rendered as OCR text",
+        "consequence": "handwritten candidate responses reproduced in examiner reports convert to ordinary-looking text; misspellings and slips in it may be OCR artefacts, not anything a candidate wrote, and nothing in the converted file marks the span as an image transcription",
+        "applies_to": "examiner reports (and any board document reproducing candidate scripts)",
+        "mandatory_action": "never quote candidate-script text or build a teaching point on its spelling/wording without viewing the script image in the source PDF; a lesson resting on the exact characters of an OCR'd handwriting span is unassertable",
+        "ruling": null
       }
     ]
   },
@@ -115,6 +123,7 @@
   "exemplars": [
     "<paths to 2 style exemplars max. A new course starts empty: the first wave's user-approved pilot files (/hero-2-write) become the exemplars>"
   ],
+  "_exemplars_note": "F153 (17 Aug 2026): when a template form or rule is RETIRED, the retirement is not finished until every artefact still carrying the old form is marked — exemplars FIRST, because everything downstream copies them. On 1PH0 this field pointed at two wave-1 files carrying a retired heading and a false levelled-count claim; the stale exemplars cost the next wave two false findings and an adjudication per file before being repointed at blind-re-audited masters. On any pack/prompt change that retires a form: sweep the files this field names (and templates/exemplars/ in the pack), and either mark the outdated form in the file's header or repoint the field at a current re-audited master.",
   "research_mode": "local",
   "research_mode_notes": "Mode switches R3 only — R1 (evidence assembly from stage-0 artifacts) and R2 (converted QP/MS corpus, discovery + extraction) run unconditionally in every mode. local = R3-local-check.md systematic ER sweep (default). hybrid = local first, NLM escalation when a subtopic's sweep returns <3 usable ER passages. nlm = R3-nlm-check.md (for courses whose ER corpus is missing or unconverted — QP/MS corpus still required). Notebook id lives in corpus.notebook_id, verified against the notebook itself via notebook_get.",
   "model_policy": {

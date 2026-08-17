@@ -38,11 +38,17 @@ import sys
 from pathlib import Path
 
 CERTAINTY_PATTERNS = [
-    (r"\bevery time\b", "absolute: 'every time'"),
+    # 'every' is generalised to ANY following word (17 Aug 2026, 1PH0 wave 3):
+    # the old enumerated list (question|paper|scheme|year) let a fixer-introduced
+    # "Every difference in that bank is worded as a comparison" through as clean,
+    # because "difference" was not on the list -- a gate that enumerates the words
+    # it looks for measures its own vocabulary. The generalised form is far
+    # noisier (~56 hits a wave on 1PH0, mostly correct bounded forms like "every
+    # one of the seven schemes") and that is the right trade: a false positive
+    # costs a glance, a miss ships a claim.
     (r"\balways\b", "absolute: 'always'"),
     (r"\bnever\b", "absolute: 'never'"),
-    (r"\bevery sitting\b", "frequency: 'every sitting'"),
-    (r"\bevery (?:question|paper|scheme|year)\b", "frequency: 'every ...'"),
+    (r"\bevery\s+\w+", "quantifier: 'every <anything>'"),
     (r"\balmost (?:every|all)\b", "frequency: 'almost every/all'"),
     (r"\bmost (?:common|often|frequently|heavily|reused)\b", "superlative: 'most ...'"),
     (r"\bthe (?:single )?(?:most|biggest|commonest|dominant)\b", "superlative"),
@@ -56,6 +62,29 @@ CERTAINTY_PATTERNS = [
     (r"\bwould also be accepted\b", "equivalence claim"),
     (r"[\"“”]", "new quoted span — verify verbatim against the pack"),
 ]
+
+# Falsification cases carried AS CODE (17 Aug 2026, from the 1PH0 tier-sweep
+# rebuild): a gate whose detector drifts must refuse to run, never sweep and
+# report clean. Each case is (line, must_hit). The first is the real fixer
+# regression the enumerated-noun pattern missed in production.
+SELF_TEST = [
+    ("Every difference in that bank is worded as a comparison", True),
+    ("every scheme on this course rewards the substitution first", True),
+    ("This route always earns the second mark", True),
+    ("Examiners never accept a bare number here", True),
+    ("The gradient of a velocity-time graph gives the acceleration", False),
+    ("Work the error through once and check the direction", False),
+]
+
+
+def selftest_failures():
+    """Return the SELF_TEST cases the current patterns get wrong (empty = pass)."""
+    fails = []
+    for line, must_hit in SELF_TEST:
+        hit = any(re.search(pat, line, re.IGNORECASE) for pat, _ in CERTAINTY_PATTERNS)
+        if hit != must_hit:
+            fails.append((line, must_hit))
+    return fails
 
 
 def baseline_exists(path: Path) -> bool:
@@ -114,6 +143,17 @@ def main() -> None:
     ap.add_argument("files", nargs="+", metavar="file.md", help="fixer-touched files to sweep")
     ns = ap.parse_args()
     ref = ns.ref
+
+    bad = selftest_failures()
+    if bad:
+        print("GATE COULD NOT RUN: pattern self-test failed — the detector no "
+              "longer catches (or wrongly fires on) its own falsification cases:")
+        for line, must_hit in bad:
+            print(f"  {'MUST-HIT missed' if must_hit else 'MUST-PASS fired'}: {line}")
+        print("Fix CERTAINTY_PATTERNS (and keep the failing case in SELF_TEST) "
+              "before sweeping — a gate that fails its own self-test must not "
+              "declare anything clean.")
+        raise SystemExit(2)
 
     total_hits = 0
     unrunnable = []

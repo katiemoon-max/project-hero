@@ -673,3 +673,79 @@ it exists to eliminate. F148 was a purpose violation, not just a prompt bug.
   caveat for Phase 2/3: the shortlist keys files by BASENAME and units 3/6 share
   practical-skills names — 9 of 16 "unit6" sample rows were really unit3; key every edit on
   unit/file. Fast-pass re-issue awaits Katie's review of the prescribed replacements + hold.
+
+## Round 9 — 17 Aug 2026 (1PH0 waves 2–3: F153–F156, two rebuilt gates, three prompt rulings)
+
+Source: "Project Hero — update for Katie, 17 August 2026" (Leander); full write-ups in her
+`~/hero-projects/1PH0/FINDINGS-FOR-KATIE-6.md`, rulings W-101–W-133 in the 1PH0 wave-state files.
+Waves 2 and 3 (Section 4, Waves — 14 subtopics) complete and unpublished.
+
+- [x] **Tier sweep: noise was masking a real defect (the round's headline).** The old sweep raised
+  11 flags over two waves — 10 of 10 adjudicable ones noise, 0 real defects — and its direction-B
+  test ("restricted SP AND no restriction language") was satisfied by a PROVENANCE MENTION
+  ("The Higher-tier report for June 2024 rewarded…"), so the live `Circular Motion` doc's two
+  unrestricted Higher-only SPs read as compliant for two waves. *A pattern loose enough to fire on
+  the wrong things is loose enough to satisfy a test that should have failed.* Leander rebuilt the
+  gate wave-agnostic (`tier_sweep.py`, replacing `tier_sweep_wave2.py`): sentence role, polarity,
+  sitting-scoped "only", `## Spec Point:` boundaries, partial ⇒ both-halves language, statement-
+  number match on both-tiers phrases — 11 flags → 2, real defects 0 → 1, and it carries 15
+  falsification cases as code and REFUSES to sweep if it fails its own self-test. Pack: hero-3
+  step 6 now states the detector requirements and upgrades F102 to self-test-EVERY-run; the 1PH0
+  script is named as the reference implementation — **adopt into `scripts/` when Leander upstreams
+  it** (same reconcile pattern as F149).
+- [x] **`fixer_diff_sweep.py` measured its own vocabulary.** A fixer introduced "Every difference in
+  that bank is worded as a comparison"; the gate's `every (question|paper|scheme|year)` list read it
+  clean; a blind re-auditor caught it. Pack: pattern generalised to `every <anything>` (her measured
+  trade adopted: ~56 hits/wave, mostly benign — a false positive costs a glance, a miss ships a
+  claim) and the script now carries its falsification cases as code (the shipped regression verbatim
+  among them) with GATE COULD NOT RUN / exit 2 on self-test failure. hero-3 step 4 notes the
+  designed noise level.
+- [x] **F153 (stale exemplars):** a retired template form must be marked on EVERY artefact still
+  carrying it, exemplars first — 1PH0's project.json pointed at two wave-1 files carrying a retired
+  heading and a false levelled-count claim; cost wave 2 two false findings + an adjudication per
+  file. Pack: `_exemplars_note` added to the project.json template with the sweep-on-retirement
+  rule. (Her local fix: repointed at two blind-re-audited masters.)
+- [x] **F154 (CHECKER item 2 called the tracker "the completeness authority"):** on 2.33P the
+  tracker was the lossy artefact and the converted spec complete — followed literally, the anti-
+  truncation rule would have truncated a correct draft. Pack: item 2 rewritten — tracker is a
+  cross-check; disagreement adjudicates at the spec PDF; never truncate a quote to match the
+  shorter source.
+- [x] **F155 (item 8 "levelled refs always carry the star"):** falsified by the board — 5 of 1PH0's
+  20 levelled questions have schemes printing no asterisk; one QP prints `*(b)` where its scheme
+  omits it. Pack: CHECKER item 8 + WRITER citations — part letter always; the star is TRANSCRIBED
+  from the QP's printing, never mandated; a star the board does not print is an invented mark.
+- [x] **F156 (OCR limitation fires on the category, not the symptom):** a writer quoted OCR'd
+  candidate handwriting as board text and taught "two spelling slips cost nothing" from misspellings
+  no candidate wrote — the quote-integrity rule applied correctly to text that wasn't the board's.
+  Pack: new `content_limitations` template entry (candidate-exemplar scripts rendered as OCR text;
+  mandatory_action: view the script image in the PDF before any quote or spelling-based lesson).
+  Same class as the IAL WPH16 "candidate-exemplar image quotes unverifiable" gotcha.
+- [x] **Prompt gap 1 — prose references (ruled):** main question number by default; part letter
+  REQUIRED where a bare number is ambiguous across owners (one Q10 = three parts, three SP owners;
+  following the old rule produced two real factual errors, and both approved exemplars violated it).
+  Encoded: WRITER citations line, CHECKER item 8.
+- [x] **Prompt gap 2 — callout title case (ruled):** sentence case, house-style/course-overridable
+  (estate 322 sentence : 80 Title; wave 3 pre-ruling ran 145:12 the other way). Encoded: WRITER
+  callout rule (example retitled), CHECKER item 13.
+- [x] **Prompt gap 3 — unit form (ruled by Leander):** forward slash at GCSE and below, negative
+  exponents at A level and above — supersedes the 2026-08-10 "board's printed notation outranks the
+  house default" wording, under which five writers chose m/s and two m s⁻¹, both licensed. Encoded:
+  WRITER house-style line. (Pattern note: all three gaps are places the pack specified *presence*
+  well and *form* poorly — worth a form-audit pass over the prompts at next quiet moment.)
+- [x] **Corpus facts folded into the template:** `second_engine_pass` must state DOC-TYPE SCOPE
+  (1PH0's tree is QPs only — 21 files, no MS/ER — making "check the second engine" unperformable
+  for MS-located absence claims) and the non-superset fact (primary drops ~8% of QP pages; second
+  engine independently dropped a question the primary retained — absence needs both trees + PDF);
+  MS row-loss entry strengthened with the first confirmed guidance-row loss (2022 June 1F, zero
+  recorded casualties — a dropped row leaves no gap and no sweep finds it; tally checks cannot see
+  a guidance row, which carries no marks).
+- [ ] **Calibration (recorded, no pack action):** blind re-audit yield vs prior treatment now four
+  clean data points — none ~10–13/file · check+fix+patches 1.7 · check+fix+rewrite+adjudications
+  0 · one cheap cycle 1.3 — the cheap cycles SHARPEN the blind pass, never replace it (wave 3's
+  blind round found the fixer regression the mechanical gate could not see). Blocker mix is a
+  fingerprint of prior treatment (manufactured certainty 68% first-pass vs 45% post-rewrite — the
+  class shrinks because something removes it, not because writers improve). Model attestation
+  18% → 76% → 100% of files across waves 1–3, zero schema variance.
+- [ ] **Owed the pack when upstreamed:** Leander's `tier_sweep.py` (reference implementation, above)
+  and her generalised `fixer_diff_sweep` variant — reconcile with the pack's fresh implementation
+  of the same rules, as with F149.
