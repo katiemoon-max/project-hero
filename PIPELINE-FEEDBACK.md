@@ -810,12 +810,15 @@ reconcile wording (hers recorded in her `PACK-DIVERGENCE.md`), adopt nothing twi
   item 13 + WRITER citations) — the star outside the bold is the accepted convention; flag only a
   dropped or escaped star. The 47 wave-2/3 instances need no edits. Point Leander at the ruling on
   her re-pull; if she reads the ruling as insufficient, that is a conversation, not a pack change.
-- [ ] **Worked-example ownership residue (W-105 case 5 decided: `Mass & Inertia` ships without one):**
-  the open policy question — may a course AUTHOR a worked example from the spec point + board
-  marking conventions, labelled as not-a-past-paper, where a barely-examined SP has nowhere to
-  borrow one? — is **Katie's call**: it changes what the documents are (226 statements across 140
-  subtopics still unwritten, so it will recur). Not encoded either way; the mark-scheme-ownership
-  rule stands meanwhile.
+- [x] **Worked-example ownership residue (W-105 case 5 decided: `Mass & Inertia` ships without one)
+  — RULED by Katie, 18 Aug 2026: authored worked examples are NOT permitted.** A spec point with no
+  past-paper worked example ships without one; a missing example honestly reflects the examination
+  record, and every example stays traceable to a real paper and a real mark scheme. An authored one
+  — however labelled — is SME-authored content entering a machine-consumed source-of-truth corpus,
+  the class the source policy excludes. Encoded as a corollary in README "Purpose & source policy"
+  (the single-home rule holds — prompts cite it, never restate it); the F148/F150 remedy and the
+  mark-scheme-ownership rule stand unchanged. Applies course-wide as the 226 unwritten statements
+  surface more cases.
 - [ ] **The machine-consumer re-examination (F157's generalisable half, owed):** a deliberate pass
   over WRITER/CHECKER for every rule whose safety assumes a context-weighing human reader —
   hedging, tolerant framing of outdated sources, "worth noticing that…". F157 is one instance of
