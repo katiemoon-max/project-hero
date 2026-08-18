@@ -749,3 +749,80 @@ Waves 2 and 3 (Section 4, Waves — 14 subtopics) complete and unpublished.
 - [ ] **Owed the pack when upstreamed:** Leander's `tier_sweep.py` (reference implementation, above)
   and her generalised `fixer_diff_sweep` variant — reconcile with the pack's fresh implementation
   of the same rules, as with F149.
+
+## Round 10 — 18 Aug 2026 (1PH0: F157–F159; 48 docs live, 82 writes in one day; the machine-consumer round)
+
+Source: "Project Hero — findings for Katie, 18 August 2026" (Leander). Waves 2–3 published + the 17
+wave-1 docs re-issued over four rounds — the most writes this pipeline has done against live content
+at once, and where most of the round was found. The reframe the round turns on: **these documents are
+machine-consumed** (retrieval, chat, question generation, marking) — a rule whose safety comes from
+surrounding context a human would weigh needs re-examining, because a retrieval system extracts, it
+does not weigh. Note on double-application: F153–F156 were already at pack HEAD from Round 9
+(`261b419`) — Leander's local applications pre-date her re-pull of that commit; on her next pull,
+reconcile wording (hers recorded in her `PACK-DIVERGENCE.md`), adopt nothing twice.
+
+- [x] **F157 (the one that generalises): quote integrity is not terminology currency.** Two documents
+  quoted a ResultsPlus tip box — "Mention forms of energy when the question is about energy
+  transfer" — as "the corrective in five words". The board retired "forms of energy" with the 2017
+  spec; the report's own prose on the same page is store/transfer compliant; measured across five
+  sittings' full QP/MS/ER sets the phrase is a hapax (2 occurrences, both tip boxes on adjacent
+  pages of one report, one carrying the board's own "enegy" typo). The quote-integrity rule was
+  applied exactly as written and produced a document instructing imitation of a retired term —
+  verbatim-quote-as-self-justifying holds for a human reader, fails for a machine ingester. Pack:
+  WRITER quote-integrity rule 4 (quote stays byte-identical + mandatory gloss naming the term
+  retired and giving the current one; authorial prose never uses retired terms); CHECKER item 6
+  terminology-currency test (unglossed quoted retired term = FIX, remedy ALWAYS the gloss, NEVER a
+  reworded quote; authorial-prose use = BLOCKER); project.json template gains `terminology.retired`
+  (retired term, current term, ruling, date) so both work from a ratified course list, not general
+  knowledge. **With the exemption her local application earned: a retirement never drives a
+  find-and-replace — a sentence whose SUBJECT is the terminology is destroyed by one ("m/s and m/s
+  mean exactly the same thing", live for a day).**
+- [x] **F158 (`verify_starred_refs.py`: every one of 318 reported render failures was false; 224 of
+  488 "starred" lines carried no star).** The ref pattern ended in `\*`, so on a bold-terminated
+  line it matched the first asterisk of the closing `**` — every plain bolded worked-example label
+  tripped it. Her originally-proposed fix (`(?!\*)`) was WRONG and adopted from her correction
+  instead: it rejects `Q9(c)***` (a genuine star before a closing bold), turning loud false
+  positives into silent false negatives. Pack script rewritten to her measured fix: capture the
+  asterisk RUN and take parity (odd = real star, even = bare delimiter), render-check against
+  TAG-STRIPPED HTML so the ruled F122(2) star-outside-bold form passes. Her measurement over 96
+  files: 488→264 ref lines, 318→0 render failures, exit 1→0. Self-tested here on the falsification
+  pair (bold label no-flag; `Q9(c)***` flagged-and-passes) plus the defect/escape channels. Known
+  limit documented in the docstring, not engineered around: italic-wrapped refs misread under
+  parity — the pack emits none; italic citations would need emphasis-state tracking. **Recalibrate
+  any recorded `--min-ref-lines` floor after adopting (the fix lowers the count).**
+- [x] **F159 (gate 9 never looks at a title): `Force & Momentum` live as `Force &amp; Momentum` —
+  body perfect, gate green, found by eye on an unrelated call.** A title is not chunk content, so
+  the chunk read-back cannot see it (second identical slip same wave on `Refraction & Speed`,
+  self-caught); and an H3 is a chunk boundary, so heading text sits on the typed ancestor,
+  invisible to leaf read-backs (three agents independently hit this verifying a heading change).
+  Pack (hero-4 gate 9 + new Re-issues section, vault copy synced): per-document `searchDocuments`
+  TITLE assertion (any HTML entity in a returned title = FAIL); one `return_type: "spec_point"`
+  ancestor probe per changed document on heading-changing waves; and prevention — **a re-issue
+  never sends a `title` parameter at all** (the round-trip through agent retyping is the only
+  fault path).
+- [x] **Stale publish artefacts (re-issue hazard, from the round's "worth knowing" list):** 13 of 17
+  wave-1 `.cobalt.md` files pre-dated a terminology ruling their masters carried; the re-issue
+  protocol followed literally would have pushed retired content back live, and the read-back would
+  have passed — it verifies delivery, not currency. Pack: hero-4 Re-issues section — regenerate
+  `.cobalt.md` from the CURRENT master through gates 1–3 before ANY re-issue write; never publish a
+  stored artefact.
+- [ ] **F122 "convention decision":** already RULED 13 Aug 2026 (F122(2), at pack HEAD in CHECKER
+  item 13 + WRITER citations) — the star outside the bold is the accepted convention; flag only a
+  dropped or escaped star. The 47 wave-2/3 instances need no edits. Point Leander at the ruling on
+  her re-pull; if she reads the ruling as insufficient, that is a conversation, not a pack change.
+- [ ] **Worked-example ownership residue (W-105 case 5 decided: `Mass & Inertia` ships without one):**
+  the open policy question — may a course AUTHOR a worked example from the spec point + board
+  marking conventions, labelled as not-a-past-paper, where a barely-examined SP has nowhere to
+  borrow one? — is **Katie's call**: it changes what the documents are (226 statements across 140
+  subtopics still unwritten, so it will recur). Not encoded either way; the mark-scheme-ownership
+  rule stands meanwhile.
+- [ ] **The machine-consumer re-examination (F157's generalisable half, owed):** a deliberate pass
+  over WRITER/CHECKER for every rule whose safety assumes a context-weighing human reader —
+  hedging, tolerant framing of outdated sources, "worth noticing that…". F157 is one instance of
+  the class, not the whole of it. Pairs with Round 9's form-audit note.
+- [ ] **Pattern-vs-reading tally (recorded, no new pack action):** four same-day failures where a
+  detector matched only the surface it had been shown (Unicode-units sweep missed 45 LaTeX-form
+  `\text{ m s}^{-1}`; blockquote sweeps missed 31 callout `>` lines; levelled-claim sweep missed
+  "Every **Paper 1** sitting…", 2 files live; duplicate-sentence scan missed a lowercase
+  instance). In every case reading agents found what patterns could not, twice via upload
+  read-backs. Reinforces (does not change) the blind-re-audit policy and the F102 self-test rule.

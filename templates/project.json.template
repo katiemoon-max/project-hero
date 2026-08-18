@@ -120,6 +120,17 @@
     "skills_line_label": "<subject skills label, e.g. 'Mathematical skills' (sciences/maths), 'Source-analysis skills' (history)>",
     "no_skills_marker": "<the no-skills phrase research packs use internally, e.g. 'No mathematical skills for this spec point' — knowledge files OMIT the skills line for those SPs>"
   },
+  "terminology": {
+    "_comment": "F157 (18 Aug 2026) — course-specific list of vocabulary the specification has SUPERSEDED, read by WRITER (quote-integrity rule 4) and CHECKER (item 6 terminology-currency test) so writers and checkers work from a ratified list rather than general knowledge. A quoted retired term stays byte-identical and gains a gloss naming it retired + giving the current term; an authorial-prose use is a defect outright. NEVER apply an entry by find-and-replace — a sentence whose subject is the terminology (notation-equivalence explanations, 'never write X' warnings) is destroyed by one.",
+    "retired": [
+      {
+        "retired_term": "<e.g. 'forms of energy'>",
+        "current_term": "<e.g. 'energy stores and transfers'>",
+        "ruling": "<what retired it, e.g. '2017 specification: energy sits in stores and moves by transfers'>",
+        "date": "<YYYY-MM-DD recorded>"
+      }
+    ]
+  },
   "exemplars": [
     "<paths to 2 style exemplars max. A new course starts empty: the first wave's user-approved pilot files (/hero-2-write) become the exemplars>"
   ],
