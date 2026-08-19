@@ -7,6 +7,8 @@ description: Stage 3 of the Project Hero pipeline — wave checking. Launches ad
 
 Read `project.json` and the wave-state file. Checker model: strongest available per project policy (never below Opus 5). Fixers: research tier (default Sonnet).
 
+**Session-resume precondition (19 Aug 2026):** if `scripts/pack_freshness.py` has not run this session, run `python scripts/pack_freshness.py --project <project_dir> --apply` before anything else — it fetches origin, fast-forwards a clean pack clone, refreshes stale project `prompts/`/`scripts/` copies (F76 classifier; `PACK PROVENANCE` customisations always kept) and advances `pack_commit`. Never run a wave stage against an unfetched pack: F159 stayed "blocking" a publish for a day after it was fixed at origin. A blocked pull or a flagged customisation stops the stage.
+
 ## Wave entry — mechanical shortlist before any checker launches (RULED 13 Aug 2026, F148/F149)
 
 Run `scripts/rn_derived_sweep.py` over the wave's drafted masters. Its per-subtopic hits — marking-behaviour sentences under unbounded quantifiers with no paper reference in their block — go into that subtopic's EXTRA_CHECKS as directed attention: the checker adjudicates each against `ms-extracts.md` under item 16's provenance check while it has the evidence open. The sweep also runs at `/hero-4-publish` gate 2 as a backstop, but catching the class there costs a loop back through this stage — here is where it is cheap. Non-blocking shortlist, never a gate: a verbatim ER quotation is a legitimate hit. (Pack copy is a fresh implementation of F149's spec — reconcile with the 1PH0 original when it is upstreamed.)

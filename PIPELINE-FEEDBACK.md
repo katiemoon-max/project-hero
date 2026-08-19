@@ -855,3 +855,24 @@ stale pull). Assessed against the pack at `96c99ce`.
   DO-NOT-RE-PIN warning citing the fork hazard. Same lesson class as F74's meta-rule: the failure
   message now carries its own correct diagnosis, so no future onboarder has to re-derive it —
   or mis-derive it.
+
+- [x] **Session-resume auto-repull (Katie's ask, 19 Aug 2026 — the structural fix behind both of this
+  round's items):** every freshness mechanism to date compared a project against its LOCAL pack clone
+  (F76 baseline diff, /hero-2-write precondition) and none ever fetched origin — so a clone that was
+  never pulled passed every check vacuously, which is precisely how F159 stayed "blocking" a publish
+  for a day after it was fixed at origin, and how a course owner's Claude debugged a converter against
+  guidance the pack had already superseded. Pack: `scripts/pack_freshness.py` — the front door /hero
+  now runs at every session resume. (1) fetches origin and fast-forwards the pack clone automatically
+  when clean; a dirty or diverged clone BLOCKS with instructions (never merges, never eats a local
+  change; offline = warning, not blocker). (2) With `--project`: classifies the project's
+  prompts/scripts copies per F76 — differs + no PACK PROVENANCE header = stale (refreshed under
+  `--apply`); header = customisation (always kept); a customisation whose pack original ALSO moved
+  since `pack_commit` is flagged for human reconcile, never auto-overwritten — then advances
+  `pack_commit` once nothing stale remains. Tested on a throwaway clone: current/clean, behind+clean
+  (auto ff-pull), behind+dirty (blocked), stale-refresh + pack_commit advance, idempotent re-run.
+  Wired in: /hero step 1 (before reading any state), a session-resume precondition line at the top of
+  all four stage skills, `paths.pack_dir` added to the project.json template (script resolves the
+  clone via --pack, paths.pack_dir, or its own location), hero-0 §F76 bullet records pack_dir at
+  setup. Live specimen the same day: the reference machine's own installed copy of hero-3-check was
+  stale against the pack (missing the 17 Aug gate hardenings) and was caught by the sync this change
+  shipped with.

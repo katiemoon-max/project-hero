@@ -7,6 +7,8 @@ description: Stage 4 of the Project Hero pipeline — wave publish. Runs protect
 
 Read `project.json` and the wave-state file. Upload agent: research tier (default Sonnet). **`createDocument` has no delete or move — never create twice; fixes to live docs go through `updateDocument`.**
 
+**Session-resume precondition (19 Aug 2026):** if `scripts/pack_freshness.py` has not run this session, run `python scripts/pack_freshness.py --project <project_dir> --apply` before anything else — it fetches origin, fast-forwards a clean pack clone, refreshes stale project `prompts/`/`scripts/` copies (F76 classifier; `PACK PROVENANCE` customisations always kept) and advances `pack_commit`. Never run a wave stage against an unfetched pack: F159 stayed "blocking" a publish for a day after it was fixed at origin. A blocked pull or a flagged customisation stops the stage.
+
 **Duplicate-SP groups** (`primary_id` + `alias_ids` in `sp-mapping.json` — F15): one note serves the whole group, but **every Cobalt id in the group still exists and still needs publishing** — the upload must satisfy the primary AND every alias id, and manifest/parity counts are per group, never per primary alone.
 
 ## Gates (in order, all mandatory)

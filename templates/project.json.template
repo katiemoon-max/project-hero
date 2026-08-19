@@ -18,6 +18,7 @@
   "paths": {
     "_comment": "PURE PATHS ONLY (2026-08-10): every value in this block is a bare path a script can open — never glue an annotation onto one (a glued note inside paths.syllabus_cross_check broke the coverage gate's file open in production). Prose about a path goes in a companion '<key>_note' field beside it; scripts reading these fields validate loudly and fail on a value that does not resolve.",
     "project_dir": "<absolute path to this project directory>",
+    "pack_dir": "<absolute path to this machine's clone of the project-hero pack repo — scripts/pack_freshness.py resolves the clone through this at session resume (19 Aug 2026), so the freshness check works even when invoked from the project's own scripts/ copy>",
     "vault_notes": "<LEGACY — absolute path to a pre-existing per-SP vault, only where /hero-1-research's adoption path is used; null on fresh builds>",
     "skills_map": "<path to skills-map.json — per-SP skills mapping read DIRECTLY from the specification at /hero-0-setup §7 (never via NotebookLM); null only with an explicit dated ruling>",
     "corpus_root": "<absolute path to the past-paper corpus — source PDFs verified on disk at /hero-0-setup §3, converted .md per sitting from §5>",
