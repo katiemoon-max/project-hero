@@ -137,11 +137,48 @@ def log(msg):
     print(msg, flush=True)
 
 
+def _fail_docling_import(exc):
+    """Diagnose a docling import failure LOUDLY and correctly (CIE 5070 onboarding,
+    19 Aug 2026): a broken environment raised ModuleNotFoundError on
+    docling.document_converter and was misread as "the script uses the v1.x API" --
+    with a proposed fix of downgrading and RE-PINNING docling, which would have
+    forked the corpus (see requirements.txt: the pin is determinism-critical).
+
+    The imports below ARE the docling v2 API and import cleanly against the pinned
+    docling==2.107.0. If they fail, the problem is ALWAYS this interpreter's
+    environment, never the script: wrong interpreter/venv for the install, a
+    partial install, or a shadowing `docling` directory on sys.path (namespace
+    package -- docling imports but __file__ is None and submodules are missing)."""
+    log("=" * 72)
+    log("DOCLING IMPORT FAILED -- this is an ENVIRONMENT fault, not a script fault")
+    log(f"  error: {exc}")
+    log(f"  interpreter: {sys.executable}")
+    try:
+        import docling
+        loc = getattr(docling, "__file__", None)
+        log(f"  'import docling' resolves to: {loc}")
+        if loc is None:
+            log("  __file__ is None -> NAMESPACE PACKAGE: a shadowing or half-"
+                "installed 'docling' directory, not a real install")
+    except ImportError:
+        log("  'import docling' fails outright -> docling is not installed in"
+            " THIS interpreter's environment")
+    log("Fix, using the SAME interpreter shown above:")
+    log(f"  {sys.executable} -m pip install --force-reinstall -r scripts/requirements.txt")
+    log("Do NOT downgrade docling or change the pin: this import path IS the v2")
+    log("API, and a different docling version silently forks a committed corpus.")
+    log("=" * 72)
+    sys.exit(1)
+
+
 def build_converter():
-    from docling.document_converter import DocumentConverter, PdfFormatOption
-    from docling.datamodel.base_models import InputFormat
-    from docling.datamodel.pipeline_options import PdfPipelineOptions
-    from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+    try:
+        from docling.document_converter import DocumentConverter, PdfFormatOption
+        from docling.datamodel.base_models import InputFormat
+        from docling.datamodel.pipeline_options import PdfPipelineOptions
+        from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+    except ImportError as exc:
+        _fail_docling_import(exc)
 
     opts = PdfPipelineOptions()
     opts.do_ocr = False                     # exam-board PDFs are digital -> skip OCR (much faster)

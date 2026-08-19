@@ -829,3 +829,29 @@ reconcile wording (hers recorded in her `PACK-DIVERGENCE.md`), adopt nothing twi
   "Every **Paper 1** sitting…", 2 files live; duplicate-sentence scan missed a lowercase
   instance). In every case reading agents found what patterns could not, twice via upload
   read-backs. Reinforces (does not change) the blind-re-audit policy and the F102 self-test rule.
+
+## Round 11 — 19 Aug 2026 (CIE 5070 onboarding: docling import misdiagnosis; no F-number — the course has not opened a findings series)
+
+Source: `PH feedback 19-Aug-26.md` (Ric, CIE 5070 first run, §5 corpus conversion; Leander's F159
+line in the same note needed no pack action — F159 was already fixed at `ce20adf`, she was on a
+stale pull). Assessed against the pack at `96c99ce`.
+
+- [x] **Docling import failure misread as an API-version fault — the proposed fix would have forked
+  the corpus.** `convert_pdfs.py` raised `ModuleNotFoundError: No module named
+  'docling.document_converter'` on Ric's machine and his Claude concluded the script "uses the v1.x
+  API", proposing to downgrade to docling<2.0 and RE-PIN requirements.txt. The diagnosis is wrong on
+  its face: `from docling.document_converter import DocumentConverter, PdfFormatOption` IS the
+  docling v2 API, and it imports cleanly against the pinned 2.107.0 (verified same day on the
+  reference machine). The true fault class is always environmental — wrong interpreter/venv for the
+  install, a partial install, or a shadowing `docling` directory leaving a namespace package
+  (`docling.__file__ is None`, submodules missing). The DANGEROUS part is not the error but the
+  plausible wrong fix: requirements.txt pins docling precisely because a different version converts
+  the same PDF to different bytes, silently forking a committed corpus — and an onboarding agent
+  that cannot import the module is exactly the agent that will propose changing the pin. Pack:
+  `convert_pdfs.py` `build_converter()` now wraps the docling imports; on ImportError it fails
+  loudly with the interpreter path, the `import docling` resolution (flagging the namespace-package
+  signature explicitly), the one-line fix bound to the SAME interpreter
+  (`<sys.executable> -m pip install --force-reinstall -r scripts/requirements.txt`), and an explicit
+  DO-NOT-RE-PIN warning citing the fork hazard. Same lesson class as F74's meta-rule: the failure
+  message now carries its own correct diagnosis, so no future onboarder has to re-derive it —
+  or mis-derive it.
