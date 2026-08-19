@@ -876,3 +876,12 @@ stale pull). Assessed against the pack at `96c99ce`.
   setup. Live specimen the same day: the reference machine's own installed copy of hero-3-check was
   stale against the pack (missing the 17 Aug gate hardenings) and was caught by the sync this change
   shipped with.
+
+- [x] **Installed-skills refresh (19 Aug 2026, same-day follow-up while updating the Notion setup
+  guide):** the guide's Step 1 copies `skills/` into the user's Claude Code skills directory — a
+  THIRD copy of the pack that neither `git pull` nor the project-copy refresh ever touched (the 5 Aug
+  version-log warning "re-copy by hand after a pull" was the only defence, and the reference
+  machine's own installed hero-3-check was caught a wave of hardenings stale). `pack_freshness.py`
+  gains `--skills-dir`: installed skills carry no customisation convention, so differing =
+  stale, refreshed under `--apply`; skills present in the pack but absent from the directory are
+  reported NOT INSTALLED. /hero step 1 now passes it and re-reads its own file if refreshed.

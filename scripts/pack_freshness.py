@@ -250,6 +250,51 @@ def step2_project(pack_dir, project_dir, apply_fixes, pack_head):
     return 0
 
 
+def step3_skills(pack_dir, skills_dir, apply_fixes):
+    """Installed-skills refresh (19 Aug 2026, same day as the rest of this
+    script): the Claude Code skills directory holds a THIRD copy of the pack --
+    Step 1 of the setup guide copies skills/ into it, and nothing ever
+    refreshed it (the reference machine's own hero-3-check was caught a wave
+    of hardenings stale). Installed skills carry no customisation convention:
+    they must match the pack byte-for-byte, so differing = stale, always."""
+    pack_skills = os.path.join(pack_dir, "skills")
+    stale, missing = [], []
+    for skill in sorted(os.listdir(pack_skills)):
+        src_root = os.path.join(pack_skills, skill)
+        if not os.path.isdir(src_root):
+            continue
+        dst_root = os.path.join(skills_dir, skill)
+        if not os.path.isdir(dst_root):
+            missing.append(skill)
+            continue
+        for base, _, names in os.walk(src_root):
+            rel = os.path.relpath(base, src_root)
+            for name in names:
+                src = os.path.join(base, name)
+                dst = os.path.join(dst_root, rel, name)
+                if not os.path.exists(dst) or not same_bytes(src, dst):
+                    stale.append((f"{skill}/{name}" if rel == "." else
+                                  f"{skill}/{rel}/{name}", src, dst))
+    log(f"\nInstalled skills: {skills_dir}")
+    if missing:
+        log(f"  NOT INSTALLED (copy from the pack's skills/): {', '.join(missing)}")
+    if not stale:
+        log("  Installed hero skills match the pack.")
+        return 1 if missing else 0
+    log(f"  STALE installed skill files ({len(stale)}):")
+    for name, _, _ in stale:
+        log(f"    {name}")
+    if not apply_fixes:
+        log("  Re-run with --apply to refresh these from the pack.")
+        return 1
+    for name, src, dst in stale:
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copyfile(src, dst)
+        log(f"  REFRESHED {name}")
+    log("  Refreshed skills take effect from the next skill invocation.")
+    return 1 if missing else 0
+
+
 def advance_pack_commit(pj_path, pj_text, old, new):
     """Targeted textual update -- project.json is hand-maintained; a json.dump
     round-trip would reformat the whole file."""
@@ -272,6 +317,9 @@ def main():
     ap.add_argument("--project", help="project directory to check/refresh")
     ap.add_argument("--apply", action="store_true",
                     help="refresh stale project copies and advance pack_commit")
+    ap.add_argument("--skills-dir",
+                    help="Claude Code skills directory holding the installed"
+                         " hero-* skill copies — refreshed to match the pack")
     args = ap.parse_args()
 
     pack_dir = find_pack_dir(args.pack, args.project)
@@ -282,13 +330,16 @@ def main():
 
     ok, _, new_head, _ = step1_pull(pack_dir)
     rc = 0 if ok else 1
-    if args.project:
-        if not ok:
-            log("\nSkipping the project refresh -- the pack pull is blocked, so a"
-                " diff against this clone would be a diff against stale content.")
-        else:
+    if not ok and (args.project or args.skills_dir):
+        log("\nSkipping the copy refresh -- the pack pull is blocked, so a diff"
+            " against this clone would be a diff against stale content.")
+    elif ok:
+        if args.project:
             rc = max(rc, step2_project(pack_dir, os.path.abspath(args.project),
                                        args.apply, new_head))
+        if args.skills_dir:
+            rc = max(rc, step3_skills(pack_dir, os.path.abspath(args.skills_dir),
+                                      args.apply))
     sys.exit(rc)
 
 
