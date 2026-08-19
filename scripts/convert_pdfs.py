@@ -354,6 +354,83 @@ def part_discontinuities(md_text):
     return issues
 
 
+TOTAL_MARKER = re.compile(r"\(?\s*Total\s+for\s+Question\s+(\d+)\s*[=:]\s*(\d+)\s*marks?", re.I)
+MARK_TAG = re.compile(r"\(\s*(\d{1,2})\s*\)")
+TALLY_ONLY_CELL = re.compile(r"^\s*(?:\(\s*\d{1,2}\s*\)[\s.]*){2,}$")
+
+
+def qp_total_audit(md_text):
+    """F165 structural gate (report-only): the conversion can drop whole question
+    parts -- or whole questions -- leaving NO gap marker, and the surrounding
+    markdown reads as continuous (1PH0: Q10 vanished entirely, 11 marks; two
+    silent drops in one file; four instances across two waves, every one found
+    by an agent at the PDF, never by a gate). The printed total markers are the
+    paper's own structural self-description, so audit against them:
+    - a missing question NUMBER in the marker sequence = a dropped question (or
+      a dropped marker, which flags the same passage);
+    - a question whose per-part mark tags sum BELOW its printed total = dropped
+      parts inside it. One-sided by design: stray parenthesised numbers can
+      only raise the sum, so only a shortfall is evidence (a sweep for the
+      wrong thing present is not a sweep for the right thing absent).
+    Returns None where a QP prints no such markers (not every board does)."""
+    totals = [(int(m.group(1)), int(m.group(2)), m.start(), m.end())
+              for m in TOTAL_MARKER.finditer(md_text)]
+    if not totals:
+        return None
+    nums = [n for n, _, _, _ in totals]
+    missing = sorted(set(range(1, max(nums) + 1)) - set(nums))
+    undersum = []
+    prev_end = 0
+    for n, total, start, end in totals:
+        span = md_text[prev_end:start]
+        tag_sum = sum(int(t) for t in MARK_TAG.findall(span) if 1 <= int(t) <= 20)
+        if tag_sum < total:
+            undersum.append({"question": n, "printed_total": total, "tag_sum": tag_sum})
+        prev_end = end
+    return {"markers": len(totals),
+            "missing_question_numbers": missing,
+            "undersummed_questions": undersum}
+
+
+def ms_tally_only_cells(md_text):
+    """F165 variant (report-only): conversion can destroy a mark scheme's ANSWER
+    content while leaving its structure intact -- 1H 2023 June Q7(a)(iii)'s
+    entire marking cell reduced to bare '(1) (1) (1)', every nuclide symbol
+    gone, mark tallies surviving so the row reads as complete. A table cell
+    containing ONLY mark tags is almost never legitimate; count them."""
+    count = 0
+    for line in md_text.splitlines():
+        stripped = line.lstrip()
+        if stripped.startswith("|") and line.count("|") >= 3:
+            if any(TALLY_ONLY_CELL.match(c) for c in line.split("|")[1:-1]):
+                count += 1
+    return count
+
+
+def pdf_duplicate_groups(search_root):
+    """F167 (report-only): MD5 every source PDF and report byte-identical
+    groups. Duplication is LEGITIMATE for one class only -- a board's
+    'insufficient entries' null examiner report, issued once per tier-cohort
+    per sitting and filed into every affected paper's folder (it carries no
+    internal identifier, so nothing downstream can tell the copies apart).
+    Two non-null files sharing a hash is an acquisition defect the pipeline
+    otherwise has no way to see. The sweep converts an anomaly into a fact."""
+    import hashlib
+    by_hash = {}
+    for pdf in find_pdfs(search_root):
+        h = hashlib.md5()
+        try:
+            with open(pdf, "rb") as f:
+                for chunk in iter(lambda: f.read(1 << 20), b""):
+                    h.update(chunk)
+        except OSError:
+            continue
+        by_hash.setdefault((h.hexdigest(), os.path.getsize(pdf)), []).append(pdf)
+    return [{"md5": k[0], "bytes": k[1],
+             "files": [os.path.relpath(p, search_root) for p in v]}
+            for k, v in sorted(by_hash.items()) if len(v) > 1]
+
+
 def paginate(body, stem):
     """Split docling's placeholder-delimited export into `## Page N` sections."""
     pages = body.split(PAGE_BREAK)
@@ -598,6 +675,45 @@ def report(records, ms_pattern, root, no_text, scope=None, no_spec_expected=Fals
         log("Read each in place against the PDF before any stage asserts an absence:")
         for r in sorted(orphaned, key=lambda x: -x["part_discontinuities"])[:10]:
             log(f"   {r['file']}  ({r['part_discontinuities']} discontinuity(ies))")
+    # F165: totals audit -- silent whole-question / whole-part drops.
+    qp_bad = [r for r in records if r.get("qp_total_audit")
+              and (r["qp_total_audit"]["missing_question_numbers"]
+                   or r["qp_total_audit"]["undersummed_questions"])]
+    if qp_bad:
+        log("")
+        log(f"QUESTION-TOTALS AUDIT (F165, report-only): {len(qp_bad)} question paper(s) fail "
+            "reconciliation against their own printed '(Total for Question N = M marks)' markers.")
+        log("A missing question number means a whole question (or its marker) was dropped; a")
+        log("mark-tag sum below the printed total means parts were dropped inside it. Recover")
+        log("each from the PDF or the second-engine tree before any absence claim is written:")
+        for r in qp_bad[:10]:
+            au = r["qp_total_audit"]
+            bits = []
+            if au["missing_question_numbers"]:
+                bits.append(f"missing Q{', Q'.join(map(str, au['missing_question_numbers']))}")
+            for u in au["undersummed_questions"]:
+                bits.append(f"Q{u['question']} tags sum {u['tag_sum']} < printed {u['printed_total']}")
+            log(f"   {r['file']}  ({'; '.join(bits)})")
+    ms_tally = [r for r in records if r.get("ms_tally_only_cells")]
+    if ms_tally:
+        log("")
+        log(f"MS TALLY-ONLY-CELL CHECK (F165 variant, report-only): {len(ms_tally)} mark scheme(s) "
+            "carry table cells containing ONLY mark tags ('(1) (1) (1)') -- answer content")
+        log("destroyed with structure intact (1H 2023 June Q7(a)(iii): every nuclide symbol gone,")
+        log("tallies surviving). Recover each cell from the PDF; where the RENDER is also corrupt,")
+        log("triangulate from a second document (W-176):")
+        for r in sorted(ms_tally, key=lambda x: -x["ms_tally_only_cells"])[:10]:
+            log(f"   {r['file']}  ({r['ms_tally_only_cells']} tally-only cell(s))")
+    dup_groups = pdf_duplicate_groups(root)
+    if dup_groups:
+        log("")
+        log(f"PDF DUPLICATE SWEEP (F167, report-only): {len(dup_groups)} byte-identical group(s).")
+        log("Legitimate ONLY for null 'insufficient entries' examiner reports (one notice per")
+        log("tier-cohort per sitting, filed into every affected folder -- identity for that class")
+        log("rests on the path, which downstream identity checks must record as 'not")
+        log("content-verifiable -- null-notice class'). Duplicate QPs or MSs = acquisition defect:")
+        for g in dup_groups[:10]:
+            log(f"   {g['bytes']} bytes: {', '.join(g['files'])}")
     if failures:
         log("")
         log("=" * 72)
@@ -643,6 +759,14 @@ def report(records, ms_pattern, root, no_text, scope=None, no_spec_expected=Fals
                         {"file": r["file"], "count": r["part_discontinuities"]}
                         for r in orphaned
                     ],
+                    "qp_total_audit_failures": [
+                        {"file": r["file"], **r["qp_total_audit"]} for r in qp_bad
+                    ],
+                    "ms_tally_only_cell_files": [
+                        {"file": r["file"], "cells": r["ms_tally_only_cells"]}
+                        for r in ms_tally
+                    ],
+                    "duplicate_pdf_groups": dup_groups,
                     "no_text": [r["file"] for r in no_text],
                     "partial_scan_files": [
                         {"file": r["file"], "empty_pages": r.get("empty_pages", 0), "pages": r["pages"]}
@@ -747,6 +871,9 @@ def main():
                 rec["bold_in_pdf"] = pdf_has_bold(sibling_pdf) if os.path.exists(sibling_pdf) else None
             if is_question_paper(p, args.qp_pattern):
                 rec["part_discontinuities"] = part_discontinuities(text)
+                rec["qp_total_audit"] = qp_total_audit(text)
+            if rec["is_mark_scheme"]:
+                rec["ms_tally_only_cells"] = ms_tally_only_cells(text)
             if os.path.exists(sibling_pdf):
                 rec["superscript_spans"] = pdf_superscript_count(sibling_pdf)
             records.append(rec)
@@ -790,6 +917,9 @@ def main():
                 rec["bold_in_pdf"] = pdf_has_bold(pdf)
             if is_question_paper(md_path, args.qp_pattern):
                 rec["part_discontinuities"] = part_discontinuities(text)
+                rec["qp_total_audit"] = qp_total_audit(text)
+            if rec["is_mark_scheme"]:
+                rec["ms_tally_only_cells"] = ms_tally_only_cells(text)
             rec["superscript_spans"] = pdf_superscript_count(pdf)
             records.append(rec)
             continue
@@ -815,6 +945,9 @@ def main():
                 rec["bold_in_pdf"] = pdf_has_bold(pdf)
             if is_question_paper(md_path, args.qp_pattern):
                 rec["part_discontinuities"] = part_discontinuities(md)
+                rec["qp_total_audit"] = qp_total_audit(md)
+            if rec["is_mark_scheme"]:
+                rec["ms_tally_only_cells"] = ms_tally_only_cells(md)
             rec["superscript_spans"] = pdf_superscript_count(pdf)
             records.append(rec)
             flags = ""

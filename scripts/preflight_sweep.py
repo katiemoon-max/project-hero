@@ -15,6 +15,11 @@ FAIL checks (any hit blocks upload):
   - Escaped starred refs "Q\\*" — counted at byte level with text.count,
     NOT a regex (a regex once produced a multi-file false positive)
   - LaTeX \\Delta inside the file (house rule: Unicode increment U+2206)
+  - Bare U+0394 GREEK CAPITAL DELTA (Round 12, 19 Aug 2026: the gate above
+    NAMED the U+0394 half of Katie's ruling in its own message but never
+    tested for it -- 5 instances across 2 wave-2 masters would have shipped
+    clean; found by the 1PH0 Kinetic Energy checker. Leander's project added
+    this gate locally on 17 Aug -- reconcile her copy on her next re-pull)
   - RN commentary syntax "$c{"
   - Images "![" and http(s) links
   - [cobalt mode only] Obsidian callouts "[!" and leading "> " blockquotes
@@ -118,6 +123,16 @@ def sweep_file(path: Path, cobalt_mode: bool, skills_marker: str):
     n_escaped = text.count(chr(92) + "*")
     if n_escaped:
         fails.append(f"escaped starred refs (backslash-asterisk): {n_escaped}")
+
+    # Round 12: the \Delta check below cites the ruling that ALSO bans U+0394,
+    # but only tested the LaTeX form -- a gate that names a rule in its message
+    # without testing it is documentation, not a gate (same lesson as F102).
+    # Lower-case delta U+03B4 is unaffected (infinitesimals stay LaTeX \delta).
+    n_greekcap = text.count("Δ")
+    if n_greekcap:
+        fails.append(f"bare U+0394 GREEK CAPITAL DELTA: {n_greekcap} (look-alike of the mandated "
+                     f"U+2206 increment; Katie's Cobalt render test, 7 Aug 2026: U+0394 does not "
+                     f"render -- normalise to U+2206)")
 
     for token, label in ((r"\Delta", r"\Delta (use Unicode increment U+2206 -- Katie's Cobalt render "
                           r"test, 7 Aug 2026: only U+2206 renders; U+0394 and \Delta both break. "

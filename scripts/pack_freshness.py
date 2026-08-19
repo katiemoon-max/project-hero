@@ -17,9 +17,18 @@ door /hero runs at every session resume:
      every brief resolves to the project's own prompts/scripts copies (the
      exact trap F76 documents). So after the pull, classify each project copy
      against the pack: differs + no PACK PROVENANCE header = STALE (refresh);
-     differs + header = deliberate customisation (keep, always). With --apply,
-     stale copies are refreshed from the pack and project.json -> pack_commit
-     is advanced -- but only once nothing stale remains.
+     differs + header = deliberate customisation (keep, always); differs + the
+     pack knows it REIMPLEMENTED the file (RECONCILE_PENDING below) = RECONCILE,
+     held for a human regardless of header. With --apply, stale copies are
+     refreshed from the pack and project.json -> pack_commit is advanced -- but
+     only once nothing stale remains.
+  4. SKILLS REFRESH (--skills-dir): the installed Claude Code skill copies are
+     assumed to be PURE PACK COPIES -- customisations belong in a project's
+     prompts/, never in an installed skill. A differing skill file is refreshed
+     under --apply, but never silently-and-totally (Leander, 19 Aug 2026): a
+     PACK PROVENANCE header is respected exactly as in step 3, and any other
+     modified file is backed up beside itself as <name>.pre-refresh-<head>
+     before being overwritten, with the backup path printed.
 
 Exit codes: 0 = current (or made current); 1 = action needed (blocked pull,
 stale copies in report-only mode, or a customisation shadowing a pack change);
@@ -47,6 +56,17 @@ if hasattr(sys.stdout, "reconfigure"):  # Windows cp1252 guard (pack-wide gotcha
 
 PROVENANCE_MARKER = "PACK PROVENANCE"
 PROVENANCE_SCAN_BYTES = 4096  # header convention: marker sits in the first lines
+
+# Files the pack KNOWS it reimplemented rather than adopted (its own skill text
+# says "reconcile with the course original when upstreamed"). A project copy of
+# one of these that differs is a RECONCILE, never a STALE -- auto-overwriting it
+# would resolve a held reconciliation by side effect (Leander, 19 Aug 2026: the
+# 1PH0 rn_derived_sweep original survived only because a human read the diff and
+# added a provenance header in time). Remove an entry when its reconciliation is
+# ruled and the ledger says so.
+RECONCILE_PENDING = frozenset({
+    "scripts/rn_derived_sweep.py",   # hero-3-check: pack copy is a fresh implementation of F149's spec
+})
 
 # project dir -> pack dir mapping for the refresh classifier. Prompts come from
 # templates/prompts/ (hero-0 setup act), scripts from scripts/.
@@ -145,12 +165,24 @@ def step1_pull(pack_dir):
     return True, head, new_head, pulled
 
 
+PROVENANCE_LINE = re.compile(
+    r"""^\s*(?:<!--\s*|\#\s*|//\s*|"{3}\s*|'{3}\s*)?PACK\ PROVENANCE\b""")
+
+
 def has_provenance(path):
+    """A provenance HEADER is a line beginning 'PACK PROVENANCE' in the first
+    few lines (comment prefixes tolerated), per the convention
+    spec_coverage_gate.py models. Never a raw substring scan: pack files
+    legitimately MENTION the marker mid-sentence (the /hero skill documents
+    the classifier itself), and a substring match classified the hero skill
+    as a customisation in testing -- which would have exempted it from the
+    very refresh it mandates."""
     try:
-        with open(path, "rb") as f:
-            return PROVENANCE_MARKER.encode() in f.read(PROVENANCE_SCAN_BYTES)
+        with open(path, encoding="utf-8", errors="replace") as f:
+            head = f.read(PROVENANCE_SCAN_BYTES)
     except OSError:
         return False
+    return any(PROVENANCE_LINE.match(line) for line in head.splitlines()[:10])
 
 
 def same_bytes(a, b):
@@ -192,7 +224,7 @@ def step2_project(pack_dir, project_dir, apply_fixes, pack_head):
         else:
             log(f"  WARNING: recorded pack_commit {pack_commit} is not in this clone.")
 
-    stale, custom, shadowed = [], [], []
+    stale, custom, shadowed, reconcile = [], [], [], []
     for proj_sub, pack_sub in COPY_MAP:
         proj_root = os.path.join(project_dir, proj_sub)
         pack_root = os.path.join(pack_dir, pack_sub)
@@ -204,6 +236,9 @@ def step2_project(pack_dir, project_dir, apply_fixes, pack_head):
             if not os.path.isfile(proj_file) or not os.path.exists(pack_file):
                 continue  # course-specific files with no pack counterpart: theirs
             if same_bytes(proj_file, pack_file):
+                continue
+            if f"{proj_sub}/{name}" in RECONCILE_PENDING:
+                reconcile.append(f"{proj_sub}/{name}")
                 continue
             if has_provenance(proj_file):
                 custom.append(f"{proj_sub}/{name}")
@@ -221,6 +256,12 @@ def step2_project(pack_dir, project_dir, apply_fixes, pack_head):
 
     if custom:
         log(f"  KEPT (PACK PROVENANCE customisations): {', '.join(custom)}")
+    if reconcile:
+        log("  RECONCILE -- the pack's copy is a known reimplementation of this")
+        log("  project's original (see RECONCILE_PENDING); held for a human, never")
+        log("  auto-overwritten. Reconcile the two, then remove the entry:")
+        for name in reconcile:
+            log(f"    {name}")
     if shadowed:
         log("  REVIEW NEEDED -- customised files whose pack original ALSO changed")
         log("  since the baseline (reconcile by hand, never auto-overwrite):")
@@ -229,9 +270,9 @@ def step2_project(pack_dir, project_dir, apply_fixes, pack_head):
     if not stale:
         log("  No stale copies -- project prompts/scripts match the pack"
             " (customisations aside).")
-        if apply_fixes and not shadowed:
+        if apply_fixes and not shadowed and not reconcile:
             advance_pack_commit(pj_path, pj_text, pack_commit, pack_head)
-        return 1 if shadowed else 0
+        return 1 if (shadowed or reconcile) else 0
 
     log(f"  STALE copies ({len(stale)}) -- differ from pack, no provenance header:")
     for name, _, _ in stale:
@@ -242,23 +283,27 @@ def step2_project(pack_dir, project_dir, apply_fixes, pack_head):
     for name, pack_file, proj_file in stale:
         shutil.copyfile(pack_file, proj_file)
         log(f"  REFRESHED {name}")
-    if shadowed:
-        log("  pack_commit NOT advanced -- shadowed customisations above need a"
-            " human reconcile first.")
+    if shadowed or reconcile:
+        log("  pack_commit NOT advanced -- shadowed customisations or RECONCILE"
+            " holds above need a human first.")
         return 1
     advance_pack_commit(pj_path, pj_text, pack_commit, pack_head)
     return 0
 
 
-def step3_skills(pack_dir, skills_dir, apply_fixes):
-    """Installed-skills refresh (19 Aug 2026, same day as the rest of this
-    script): the Claude Code skills directory holds a THIRD copy of the pack --
-    Step 1 of the setup guide copies skills/ into it, and nothing ever
-    refreshed it (the reference machine's own hero-3-check was caught a wave
-    of hardenings stale). Installed skills carry no customisation convention:
-    they must match the pack byte-for-byte, so differing = stale, always."""
+def step3_skills(pack_dir, skills_dir, apply_fixes, pack_head):
+    """Installed-skills refresh (19 Aug 2026; hardened same day on Leander's
+    verification note): the Claude Code skills directory holds a THIRD copy of
+    the pack -- Step 1 of the setup guide copies skills/ into it, and nothing
+    ever refreshed it (the reference machine's own hero-3-check was caught a
+    wave of hardenings stale). ASSUMPTION, stated because it is load-bearing:
+    installed skills are PURE PACK COPIES -- customisations belong in a
+    project's prompts/, never in an installed skill. Because someone may
+    hand-edit one anyway, the refresh is never silent-and-total: a PACK
+    PROVENANCE header is respected (kept + flagged), and any other modified
+    file is backed up beside itself before being overwritten."""
     pack_skills = os.path.join(pack_dir, "skills")
-    stale, missing = [], []
+    stale, missing, custom = [], [], []
     for skill in sorted(os.listdir(pack_skills)):
         src_root = os.path.join(pack_skills, skill)
         if not os.path.isdir(src_root):
@@ -272,27 +317,42 @@ def step3_skills(pack_dir, skills_dir, apply_fixes):
             for name in names:
                 src = os.path.join(base, name)
                 dst = os.path.join(dst_root, rel, name)
-                if not os.path.exists(dst) or not same_bytes(src, dst):
-                    stale.append((f"{skill}/{name}" if rel == "." else
-                                  f"{skill}/{rel}/{name}", src, dst))
+                label = f"{skill}/{name}" if rel == "." else f"{skill}/{rel}/{name}"
+                if not os.path.exists(dst):
+                    stale.append((label, src, dst, False))
+                elif not same_bytes(src, dst):
+                    if has_provenance(dst):
+                        custom.append(label)
+                    else:
+                        stale.append((label, src, dst, True))
     log(f"\nInstalled skills: {skills_dir}")
     if missing:
         log(f"  NOT INSTALLED (copy from the pack's skills/): {', '.join(missing)}")
+    if custom:
+        log(f"  KEPT (PACK PROVENANCE header): {', '.join(custom)} -- note: a"
+            " customised INSTALLED skill is unusual; customisations normally"
+            " belong in the project's prompts/, so check this is deliberate")
     if not stale:
-        log("  Installed hero skills match the pack.")
-        return 1 if missing else 0
+        log("  Installed hero skills match the pack"
+            + (" (customisations aside)." if custom else "."))
+        return 1 if (missing or custom) else 0
     log(f"  STALE installed skill files ({len(stale)}):")
-    for name, _, _ in stale:
-        log(f"    {name}")
+    for label, _, _, _ in stale:
+        log(f"    {label}")
     if not apply_fixes:
         log("  Re-run with --apply to refresh these from the pack.")
         return 1
-    for name, src, dst in stale:
+    for label, src, dst, existed in stale:
         os.makedirs(os.path.dirname(dst), exist_ok=True)
+        if existed:  # never destroy a local edit silently -- back it up first
+            backup = f"{dst}.pre-refresh-{pack_head}"
+            shutil.copyfile(dst, backup)
+            log(f"  REFRESHED {label} (previous version kept at {os.path.basename(backup)})")
+        else:
+            log(f"  REFRESHED {label} (was absent)")
         shutil.copyfile(src, dst)
-        log(f"  REFRESHED {name}")
     log("  Refreshed skills take effect from the next skill invocation.")
-    return 1 if missing else 0
+    return 1 if (missing or custom) else 0
 
 
 def advance_pack_commit(pj_path, pj_text, old, new):
@@ -339,7 +399,7 @@ def main():
                                        args.apply, new_head))
         if args.skills_dir:
             rc = max(rc, step3_skills(pack_dir, os.path.abspath(args.skills_dir),
-                                      args.apply))
+                                      args.apply, new_head))
     sys.exit(rc)
 
 

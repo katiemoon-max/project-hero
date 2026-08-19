@@ -60,7 +60,17 @@ For EVERY quote in R3's section 1 (not a sample):
    Where the internal identifier is a board placeholder (e.g. Pearson's literal
    `Publications Code xxxxxxxx*`), record "no code published" and confirm identity
    from other internal content; never invent a code and never fall back to the path
-   (F32). The worst production catch of this class was a §1 FILE-SWAP: three
+   (F32). **Null-notice exemption (F167):** where a file carries NO internal
+   identifier of any kind — the board's "insufficient entries" notice class:
+   no cover page, no code, no paper or tier reference (Pearson's are
+   byte-identical across every affected paper's folder — same MD5) — record
+   `identity not content-verifiable — null-notice class` and move on: neither
+   assert an identity the content cannot support nor file an anomaly (three
+   agents in one wave independently rediscovered this dead end). The
+   conversion report's F167 MD5 duplicate sweep is the adjudication: one
+   notice per tier-cohort per sitting, filed into every affected folder, is
+   the legitimate duplication pattern; and an absence claim resting on such a
+   file must say so rather than claiming a tier-specific check. The worst production catch of this class was a §1 FILE-SWAP: three
    "Oct 2023 ER" quotes were June 2023's text at identical line numbers, and it
    survived checker + fixer + harmonisation because nothing before this step checked
    identity.

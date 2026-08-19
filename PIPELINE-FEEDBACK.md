@@ -885,3 +885,111 @@ stale pull). Assessed against the pack at `96c99ce`.
   gains `--skills-dir`: installed skills carry no customisation convention, so differing =
   stale, refreshed under `--apply`; skills present in the pack but absent from the directory are
   reported NOT INSTALLED. /hero step 1 now passes it and re-reads its own file if refreshed.
+
+
+## Round 12 — 19 Aug 2026 (1PH0 waves 4–5: F160–F167 + W-176 + freshness-fix verification; the gates-that-check-the-label round)
+
+Source: `Project Hero — findings for Katie, 19 August 2026.md` (Leander, 1PH0). Assessed and fixed
+against the pack at `331048e`. Her status table confirms: re-pull done, skills refreshed via
+`--skills-dir` (verified working on a real stale tree — all six skills were stale, hero-4 by 10
+lines, and the F159 fix sat in the repo while the installed skill lacked it), the vacuous-pass bug
+reproduced independently (`rev-list` against a never-updated tracking ref returned "up to date" on a
+clone seven commits behind). The round's unifying class, named in her own doc: *a gate that checks
+the label instead of the thing* (F160 checks shards not the script; F162 checks refs not content;
+F166 checks the subtopic's vocabulary not the examiner's prose; F167 mandates a check its input
+class cannot satisfy).
+
+- [x] **Freshness-fix hardening (her verification note + open question 3):** `--skills-dir --apply`
+  no longer assumes-silently — the purity assumption is stated in the docstring, a PACK PROVENANCE
+  header in an installed skill is respected (kept + flagged as unusual), and any other hand-edited
+  skill is backed up beside itself as `<name>.pre-refresh-<head>` before overwrite, path printed.
+  Answer to "should it refuse?": no — refusing reopens the stale-skill hole F159 fell into; it
+  overwrites loudly with a backup, which preserves both the refresh guarantee and the local edit.
+  Bug found while testing: provenance detection was a raw substring scan, and the /hero skill's own
+  body text (which documents the classifier) matched it — detection is now line-anchored
+  (`PACK PROVENANCE` at line start, comment prefixes tolerated, first 10 lines only).
+- [x] **RECONCILE classification (her held `rn_derived_sweep.py` + pack suggestion):** new
+  `RECONCILE_PENDING` set in `pack_freshness.py` — files the pack KNOWS it reimplemented (its own
+  skill text says "reconcile when upstreamed") are reported RECONCILE and never auto-overwritten,
+  regardless of header; `pack_commit` does not advance past them. Seeded with
+  `scripts/rn_derived_sweep.py`. Her hold stands; the reconciliation itself happens at upstream
+  time, and the entry is removed when the ledger records the ruling.
+- [x] **U+0394 preflight gate (her owed item 3, taken directly):** `preflight_sweep.py` FAILs bare
+  U+0394 GREEK CAPITAL DELTA — the old gate cited the ruling that bans it in its own \Delta message
+  but never tested for it (5 instances across 2 live-bound masters would have shipped clean; same
+  lesson as F102: a rule named in a message without a test is documentation, not a gate). Her local
+  17 Aug gate reconciles on her next re-pull (her copy carries a provenance header).
+- [x] **F160 (merge --check compares to shards, never to the script):** three fixes in
+  `merge_cobalt_shards.py` — (1) --check FAILS when the script is newer than the merged file;
+  (2) SCHEMA_VERSION stamp (`schema-v2`) written into the merged header and asserted by --check, so
+  a pre-stamp merged file is STALE by definition (this catches the 1PH0 case exactly: FRESH printed
+  for twelve days over a merged file missing 55 subtopic headings, and an R1 inferred "three
+  consecutive empty headers" from the missing boundaries); (3) both shard-schema error messages now
+  name the remedy — regenerate shards via the stage-0 §6 extraction, never hand-edit. All three
+  legs tested (no-stamp, script-newer, fresh). **NOT pack-closable: 1PH0's shards are wholly
+  pre-F28 (785/785 entry lines fail, 206 forbidden headings) — regenerating them is a stage-0 re-run
+  on a course four waves in. Katie's call, recommendation in the response doc.**
+- [x] **F161 (levelled index has no owner, races under concurrency):** the index is now built by ONE
+  wave-level agent BEFORE the R2 fan-out (hero-1 step 4 — a real barrier; "built once by the first
+  R2" made "first" undefined and nine agents wrote the same file, the survivor winning by finishing
+  last); R2s hold it READ-ONLY with missing/wrong = escalation, never a write; the index is
+  subtopic-neutral by construction (verdict column records WHICH subtopics a question touches,
+  never a yes/no relative to its writer — the surviving version's column answered for one subtopic
+  and marked two in-scope rows `No`); packs cite rows, never transcribe (a local 20-row copy
+  drifted 5 rows wrong while the shared index stayed correct).
+- [x] **F162 (R3's coverage gate tests REFS, not CONTENT):** new mandatory §4b in
+  `R3-local-check.md` — "new material on refs R2 already covered" (exemplar pairs with examiner
+  comments, boxed tips), a top-up queue like §4's, headed **None.** when empty so absence is
+  detectable. §4's semantics unchanged, per her suggestion. The ResultsPlus exemplar class is the
+  highest-value ET&T material the corpus holds and its loss was invisible — one confirmed instance
+  found by a human reading prose. Owed (recorded, not yet run): her closing suggestion of a sweep
+  over the other stages' gates for the same passes-for-structural-reasons pattern.
+- [x] **F163 (fixer brief has no channel for the rulings path):** FIXER.md gains the RULINGS
+  parameter (wave-state path named explicitly), hero-3's launch template passes it, and a
+  missing/unreadable RULINGS is a STOP, never "so there are none" (the forbidden F103-shape
+  inference; 3 of 15 fixers, one also declaring the project "not a git repository" while thirteen
+  siblings ran git diff in it).
+- [x] **F164 (CHECKER item 8 reads as a whole-file rule):** scope named — running prose vs
+  reference LISTS (Typical-questions bullets, appearance tables carry full part refs, as the
+  ratified exemplars do). Plus the two siblings her doc names: item 4 gains the first-PROSE-
+  appearance scope (a spec quote introducing a term early is not a late definition) and item 6
+  gains the whitespace threshold (normalised-whitespace comparison; only word/character/punctuation
+  differences are findings). Owed (recorded): her meta-suggestion — a scope line per checklist
+  item — folds into the standing machine-consumer re-examination.
+- [x] **F165 (conversion silently drops whole question parts — HIGH):** three-part fix.
+  (1) `convert_qp_second_engine.py` upgraded from benchmark-dependent option to MANDATORY pack step
+  at hero-0 §5. (2) New F165 QUESTION-TOTALS AUDIT in `convert_pdfs.py` (report-only): reconciles
+  each QP against its own printed "(Total for Question N = M marks)" markers — missing question
+  numbers = dropped questions, and per-question mark-tag sums BELOW the printed total = dropped
+  parts (one-sided by design: noise only raises a sum, so only a shortfall is evidence). Would have
+  caught all four 1PH0 instances. (3) New MS TALLY-ONLY-CELL check (report-only): a table cell
+  containing only mark tags — the answer-destroyed-structure-intact variant (Q7(a)(iii)'s
+  "(1) (1) (1)"). Unit-tested.
+- [x] **F166 (ER-silence by term sweep is unsound):** her option (a) adopted — R2's record carries
+  NO per-ref ER-presence field; the verdict belongs to R3, whose dual method (header regex AND
+  content sweep) is the only sound basis, each leg catching what the other misses ("taking 6 from
+  14" carries no subtopic term; a paper-level preamble carries no question header). R2 still quotes
+  ER comments it finds for its extracts; it never writes a "no ER comment" row. Removes a whole
+  class of stale duplicate state.
+- [x] **F167 (identity rule unsatisfiable for null ERs):** three-part fix per her suggestion.
+  (1) TOPUP Task B gains the null-notice exemption (`identity not content-verifiable — null-notice
+  class` — neither assert nor anomalise; three agents rediscovered the dead end independently).
+  (2) hero-0 §3 records the null-notice inventory PER TIER-COHORT, not per paper. (3) New F167 MD5
+  DUPLICATE SWEEP in `convert_pdfs.py` (report-only): byte-identical groups listed; legitimate only
+  for the null-notice class, duplicate QPs/MSs = acquisition defect the pipeline previously could
+  not see. Her adjudication (one notice per cohort, filed per folder, no real report masked) is
+  encoded in the report text.
+- [x] **W-176 refined (a render can be corrupt too):** the three-routes rule in R2 and R3 gains the
+  second half — where the rendered page itself carries font-substitution corruption (the two "Np"
+  glyphs not even matching each other), triangulate from a SECOND DOCUMENT (QP's pre-printed
+  element name; the MS numerals carry the marking content), never from the corrupt glyph.
+- [x] **Wave-size question:** her read accepted — cap stays 19 (half the Round 10 condition met:
+  blind-yield 2.0/file corroborates the ~6x cycle effect, but eight new findings in one wave means
+  the pack has not stopped teaching). Her `wave_size` push to the ceiling of 19 is inside the cap,
+  no ruling needed. Wave-5 throughput number of record: 68 agents / ~2h20m / ~8M tokens, all Sonnet.
+- [ ] **Still owed her side (unchanged):** `tier_sweep.py` + `fixer_diff_sweep` variant upstreaming;
+  the `rn_derived_sweep.py` reconciliation (now held safely under RECONCILE_PENDING); project
+  reconcile + `pack_commit` advance + `--min-ref-lines` recalibration at her next clean boundary;
+  her confirmation line on the 96c99ce authored-WE ruling.
+- [ ] **Owed pack-side (recorded):** the F162-shape sweep over other stages' gates; per-item scope
+  lines for CHECKER (folds into the machine-consumer re-examination, still owed from Round 10).
