@@ -928,7 +928,10 @@ class cannot satisfy).
   name the remedy — regenerate shards via the stage-0 §6 extraction, never hand-edit. All three
   legs tested (no-stamp, script-newer, fresh). **NOT pack-closable: 1PH0's shards are wholly
   pre-F28 (785/785 entry lines fail, 206 forbidden headings) — regenerating them is a stage-0 re-run
-  on a course four waves in. Katie's call, recommendation in the response doc.**
+  on a course four waves in. **RULED by Katie, 19 Aug 2026: regeneration AUTHORISED** -- run the stage-0 §6 extraction
+  in the current schema at Leander's next clean boundary, BEFORE wave-5 writers launch, then
+  merge under the new schema-v2 stamp. Wave-4 publish does not gate on it (spec-point layer
+  intact; R1 keys on spec-point headings), but every future wave's R1 reads this file.**
 - [x] **F161 (levelled index has no owner, races under concurrency):** the index is now built by ONE
   wave-level agent BEFORE the R2 fan-out (hero-1 step 4 — a real barrier; "built once by the first
   R2" made "first" undefined and nine agents wrote the same file, the survivor winning by finishing
